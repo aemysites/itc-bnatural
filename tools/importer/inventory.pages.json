@@ -1,0 +1,476 @@
+{
+  "templates": [
+    {
+      "name": "'Blog Listing Page'",
+      "cluster": 1,
+      "pages": [
+        {
+          "url": "https://bnatural.in/sitemap.html",
+          "uuid": "28ff92676fbd030256a10a32b320bc273ecbfcec"
+        },
+        {
+          "url": "https://bnatural.in/privacy-policy.html",
+          "uuid": "09fba1c50a5c039c475d7ce994d757ed83e6b78a"
+        },
+        {
+          "url": "https://bnatural.in/know-more.html",
+          "uuid": "5ebb8723456c9851e83af8e0a998b10fac330a03"
+        },
+        {
+          "url": "https://bnatural.in/our-story.html",
+          "uuid": "e3bdb9134fb38a7c81868f4b1f3b2177bf641e84"
+        },
+        {
+          "url": "https://bnatural.in/recipes.html",
+          "uuid": "18e7bdd6fbf3ce5bc4a2f284366e3219ef50d6b4"
+        },
+        {
+          "url": "https://bnatural.in/tender-coconut-water.html",
+          "uuid": "93627ad084cd40c10a660a0dc2d4f48eddcc8168"
+        },
+        {
+          "url": "https://bnatural.in/media.html",
+          "uuid": "af33dd2fb78b6e6cd8c0ca736294bf8cbaa161d5"
+        },
+        {
+          "url": "https://bnatural.in/shinchan.html",
+          "uuid": "8771041a498c9fd4d70b9896e682e994c6c22437"
+        },
+        {
+          "url": "https://bnatural.in/brand-partnerships.html",
+          "uuid": "432756a34cff92710be84e8b70f8487d44b65a08"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre.html",
+          "uuid": "3a219ef033e74824c2d97968ce4683317b9ab08c"
+        },
+        {
+          "url": "https://bnatural.in/itcdairybeverages-factorylocator.html",
+          "uuid": "86b880638a6b7d85e880714436f5300e2c958ac7"
+        },
+        {
+          "url": "https://bnatural.in/contact-us.html",
+          "uuid": "63f71d6ba6b9895e33d68985a271ca2161b3bd12"
+        },
+        {
+          "url": "https://bnatural.in/factory-finder.html",
+          "uuid": "dc6373b6b075c842dab4c36e0ada2cac00acdf3b"
+        },
+        {
+          "url": "https://bnatural.in/no-added-sugar.html",
+          "uuid": "437f4e31381f4c74c91695ded54d6adf17263686"
+        },
+        {
+          "url": "https://bnatural.in/fruits-n-bits.html",
+          "uuid": "c1e971478a5fcf0ccbbc1947a3d052e82cbe276a"
+        },
+        {
+          "url": "https://bnatural.in/b-natural-10-10.html",
+          "uuid": "fead7cbfc5a397f54307df97e737e09c83c74ba5"
+        }
+      ]
+    },
+    {
+      "name": "'Portfolio Showcase'",
+      "cluster": 2,
+      "pages": [
+        {
+          "url": "https://bnatural.in/fruits-fibre/pineapple.html",
+          "uuid": "bea5fbda12bdfe20c1d41b856448974dac2be954"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/cranberry.html",
+          "uuid": "094615dbafd7877907cd5a3be566ce8d48953141"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/litchi.html",
+          "uuid": "0f198a3a7db8cb306de67fc23e46b98cd5a29685"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/guava.html",
+          "uuid": "a4ff00ca4f4767897d1877d8fd4d1480a2662766"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/mixed-fruit.html",
+          "uuid": "12c035a0c2c72369f6b125d598dcb4a4e269894d"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/apple.html",
+          "uuid": "cc461c617cb062ad4a5374df1bf9b5fa410d08d3"
+        },
+        {
+          "url": "https://bnatural.in/fruits-fibre/orange.html",
+          "uuid": "d0608b4af6a1636198a048c3dfd9fea8f308c169"
+        }
+      ]
+    },
+    {
+      "name": "'News Portal Template'",
+      "cluster": 3,
+      "pages": [
+        {
+          "url": "https://bnatural.in/brand-partnerships/dominos-brand-partnership.html",
+          "uuid": "579b3a402a095ed2bb22ff0c1bae3c959bf698d6"
+        },
+        {
+          "url": "https://bnatural.in/brand-partnerships/air-asia-brand-partnership.html",
+          "uuid": "fd2c58e69897f2aec69926cf89266b765b83595d"
+        },
+        {
+          "url": "https://bnatural.in/brand-partnerships/akasa-brand-partnership.html",
+          "uuid": "406603fc275fb7bdbb38782083f218cc09781af6"
+        },
+        {
+          "url": "https://bnatural.in/brand-partnerships/nutrilite-partnership.html",
+          "uuid": "38911f47c9387dea4e905dc6ee48e87c0a36a615"
+        },
+        {
+          "url": "https://bnatural.in/brand-partnerships/mcdonalds-brand-partnership.html",
+          "uuid": "bb478a73bfb3a9cbc29aabc95d7e7710bd954db5"
+        }
+      ]
+    },
+    {
+      "name": "'Gallery Page'",
+      "cluster": 4,
+      "pages": [
+        {
+          "url": "https://bnatural.in/recipes/mango-ginger-mocktail-recipe.html",
+          "uuid": "9924a3f9e473924d1ffcf6b438ce2c291ce6d5ae"
+        },
+        {
+          "url": "https://bnatural.in/recipes/guava-margarita-mocktail.html",
+          "uuid": "b076bc4ae435bee8b7fae6355559198c2dcb4544"
+        },
+        {
+          "url": "https://bnatural.in/recipes/guava-lemonade-recipe.html",
+          "uuid": "a1559964d71c2a7dd0fe85d19b7e24979ba919e0"
+        },
+        {
+          "url": "https://bnatural.in/recipes/mango-basil-mocktail.html",
+          "uuid": "4ea30f3febb48db48462b8bce9fd2e327e4e70f3"
+        },
+        {
+          "url": "https://bnatural.in/recipes/mango-mule-mocktail.html",
+          "uuid": "f79fd67f7e10417bb9fe30c1a7adcf90bd430360"
+        },
+        {
+          "url": "https://bnatural.in/recipes/spiced-mango.html",
+          "uuid": "add44aea6b705c564fbd02d78d2afc33a1991f75"
+        },
+        {
+          "url": "https://bnatural.in/recipes/pavilion-punch.html",
+          "uuid": "442f420ce9127e04940fb8fb7ab316c1b0cb56ad"
+        },
+        {
+          "url": "https://bnatural.in/recipes/peru-pyala.html",
+          "uuid": "3c0780fbec85c9293941873672847dfb90697703"
+        }
+      ]
+    },
+    {
+      "name": "'Portfolio Template'",
+      "cluster": 5,
+      "pages": [
+        {
+          "url": "https://bnatural.in/know-more/news.html",
+          "uuid": "445d0522d935c3c6fba56c55d90e0bbf013f1eb9"
+        },
+        {
+          "url": "https://bnatural.in/know-more/bnatural-in-the-news.html",
+          "uuid": "766a54284afe0a35accbf2b733c4ffdbaf94d579"
+        },
+        {
+          "url": "https://bnatural.in/know-more/campaign.html",
+          "uuid": "07deb502e60158fa17e913d3c695de66260d3136"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog.html",
+          "uuid": "370adf0d7e1afc384c347577f8fa26e158aa2e99"
+        }
+      ]
+    },
+    {
+      "name": "'gallery template'",
+      "cluster": 6,
+      "pages": [
+        {
+          "url": "https://bnatural.in/media/news.html",
+          "uuid": "b6cd75895cee80d4c6a8bc302ba4c81d1df55b98"
+        },
+        {
+          "url": "https://bnatural.in/media/did-you-know--myth---facts-for-vitamin-c--vitamin-e-and-dietary-.html",
+          "uuid": "722bbd45441de6b292b75428720e98138889f7ef"
+        },
+        {
+          "url": "https://bnatural.in/media/interesting-facts-about-fruits-for-the-website.html",
+          "uuid": "8861784af8756367b7445d6815839cf5e7140213"
+        }
+      ]
+    },
+    {
+      "name": "'gallery page'",
+      "cluster": 7,
+      "pages": [
+        {
+          "url": "https://bnatural.in/b-natural-10-10/mixed-fruits.html",
+          "uuid": "a438729e8f41591592010e5dede439d2ff26dba7"
+        },
+        {
+          "url": "https://bnatural.in/b-natural-10-10/guava.html",
+          "uuid": "2936a36d064d0169b9bda42e579685bd5a339e70"
+        },
+        {
+          "url": "https://bnatural.in/b-natural-10-10/mango.html",
+          "uuid": "c2969ca31a4e144f9755802f5f88b50081afbfc7"
+        }
+      ]
+    },
+    {
+      "name": "'Portfolio Showcase'",
+      "cluster": 8,
+      "pages": [
+        {
+          "url": "https://bnatural.in/",
+          "uuid": "58deae4b06c0f10126f82797838ec4ce350e3b1c"
+        }
+      ]
+    },
+    {
+      "name": "'Dashboard Layout'",
+      "cluster": 9,
+      "pages": [
+        {
+          "url": "https://bnatural.in/fruits-n-bits/guava.html",
+          "uuid": "e905ce826fef3b560f4bfd991373980aa7a8acaf"
+        },
+        {
+          "url": "https://bnatural.in/fruits-n-bits/litchi.html",
+          "uuid": "ab6c11b3cdebab7684e51112c80756f7f2ca01b0"
+        },
+        {
+          "url": "https://bnatural.in/fruits-n-bits/mixed-fruit.html",
+          "uuid": "2be0883c277f776e9a236eead4c2d2309e1065bb"
+        }
+      ]
+    },
+    {
+      "name": "'Gallery page'",
+      "cluster": 10,
+      "pages": [
+        {
+          "url": "https://bnatural.in/no-added-sugar/no-added-sugar-mixed-fruit.html",
+          "uuid": "6b2968bf736dda58c836064840c9931745fa0825"
+        },
+        {
+          "url": "https://bnatural.in/no-added-sugar/no-added-sugar-guava.html",
+          "uuid": "ee76f65fcb7b7e786d925c2adfc9d3e465566bfc"
+        }
+      ]
+    },
+    {
+      "name": "'Portfolio Gallery'",
+      "cluster": 11,
+      "pages": [
+        {
+          "url": "https://bnatural.in/know-more/blog/orange-bars-recipe.html",
+          "uuid": "c853c3d2e258c2ea52951fbd9dc74cfcee793846"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/5-lychee-mocktail-recipes.html",
+          "uuid": "c98cbb672e2134c8ccbf01de1136205b8eb6c4ff"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/different-type-of-apples.html",
+          "uuid": "5c4b11966164a3e36573ebcf6af8fe0deb140b58"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/5-fun-festival-winter-mocktails-recipes.html",
+          "uuid": "cdaaedc5302743485d2ce41f0f9a000e0a397a71"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/health-benefits-of-litchis.html",
+          "uuid": "3213b591e08963890ad5e6ac6b9457389d6a1451"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/types-of-oranges.html",
+          "uuid": "ea0018e602bb13594476b3db3de1b259b596cd43"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/benefits-of-orange-juice.html",
+          "uuid": "95bcad6dbe4955a2627fd616bae952af20c49663"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/benefits-of-tender-coconut-water.html",
+          "uuid": "e07165e1bc95ecc41660e4da7b9c2b4451e0073e"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/mocktail-recipes-for-summer.html",
+          "uuid": "6c6a8dc59e76e2423b7720c010bc49982d189d14"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/juice-and-food-pairing.html",
+          "uuid": "e7ad4ca85fee8658c74803abbb5c7731e74d199b"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/hydrating-drinks-recipe.html",
+          "uuid": "990f9f08066cc5b239e70827f0bb011a87c86bd4"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/fruits-in-diet.html",
+          "uuid": "f5fb00585d5ba4572fc7d74e505dacfb69b5c5b8"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/fruit-juices-for-health.html",
+          "uuid": "a8907aa8cad9f9fabf43568c1ed0ca86bb8a9225"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/food-and-juice-for-breakfast.html",
+          "uuid": "8b12c1cd0d70651a3580703880d120b7009d5a8f"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/skin-glow-juices.html",
+          "uuid": "624baf0f52dd70e9bbf7f1014acab3594e04e65c"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/winter-drinks-and-mocktails.html",
+          "uuid": "6aa1a4fdc0aed33983bb5dac176ddfab9f7c0585"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/best-juices-for-cold.html",
+          "uuid": "24d383ff05cf34d5d6e32ab91bbd3f4fbfc76a53"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/benefits-of-pomegranate-juice.html",
+          "uuid": "ec88c1195cc7361bf2b80bd6a35be749812d0b72"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/skin-benefits-of-guava.html",
+          "uuid": "4f9092d4a02644474d8011f0bb71e6bfca6369f9"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/best-hydrating-juices.html",
+          "uuid": "0a35d52d07269049fca8bb2ea487ee2902a79b11"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/monsoon-fruits.html",
+          "uuid": "b695acb7b28f0d1dec78e013231b3017e4fef77f"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/mango-drinks-for-summer.html",
+          "uuid": "7913fe7d9df2159e52a174362b021eb175a7523d"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/litchi-mocktails-for-summer.html",
+          "uuid": "6a13f7289293aeaeee1cb7c68396fd2d1a9e031c"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/colon-cleanse-drink.html",
+          "uuid": "11a14c549833d9ed99e921bef74aa74019f855a5"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/orange-juice-mocktails.html",
+          "uuid": "cc33b1d4b024de85e8d2770ce1b995cd6f4c1b1e"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/ratnagiri-alphonso-mango.html",
+          "uuid": "27b682c3f5ea13941f8f4e600e4a6c28b295e2fb"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/coconut-water-for-hydration.html",
+          "uuid": "73a6b1e583b47b13047941c6b886f4eb578ab8e3"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/coconut-juice-recipes.html",
+          "uuid": "1379ff3ce9dee0ecf6d41be7422e354473184270"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/orange-juice-in-recipes.html",
+          "uuid": "442c73037eff6bcf7f2cf21fbf15cb1849cc0504"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/interesting-facts-about-fruits.html",
+          "uuid": "c07e2bec1611098eb1c2bc488fe06accf86da714"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/did-you-know--myth---facts-for-vitamin-c--vitamin-e-and-dietary-.html",
+          "uuid": "0e634820914af6a9c0193355dc0b372baf224441"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/fruit-nutrition.html",
+          "uuid": "ebda15d66bb35ee1fe58a78495a0ae58734684f9"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/dietary-fibre-types-and-sources.html",
+          "uuid": "e6e3ae20ac59c11bb29467dde8ef72b4ff7f6068"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/what-is-dietary-fibre-and-how-much-we-need.html",
+          "uuid": "b7ef1ae6adeb08ec644ef93bf77b87aed57b74a3"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/homemade-mocktail-recipes.html",
+          "uuid": "2d27f948e30c6d22958da4ade15381ee031d2da5"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/fruit-cheese-pairings-guide.html",
+          "uuid": "300f30fd9faa7749b167a4baffb4adaf41197af7"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/five-fruit-drink-garnishing-techniques.html",
+          "uuid": "f479553c1bd936dd3b79bb6cbaa9b142a65a4296"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/different-varieties-of-guava.html",
+          "uuid": "bce50a8e6bc273fa25454ec9a83d2abc373865d4"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/6-cranberry-juice-recipes.html",
+          "uuid": "998bc6025569a5ac061b59c921850a786409c22e"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/7-pineapple-mocktail-recipe-and-drinks.html",
+          "uuid": "b06657dfbdfb9e17a31ee01485d165fd859618d3"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/6-interesting-facts-about-fruit.html",
+          "uuid": "e72761f5db5eaf0e774c8f18ceffcd34059d1700"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/orange-fruit-juice-for-immune-system.html",
+          "uuid": "59b8a8e5d79fd45de8d3d8aea523e61fcdce4f2e"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/litchi-production-and-history-in-india.html",
+          "uuid": "f5a19cadc97089345ac6efb1b3c31bbca4dccd41"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/pink-guava-vs-white-guava.html",
+          "uuid": "5d295ee2134a8610c9c367cccaf61f9aa767fe38"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/reuse-leftover-fruit-pulp.html",
+          "uuid": "6b2808604f6f5deca56fa140ddbdcbae8efb6e51"
+        },
+        {
+          "url": "https://bnatural.in/know-more/blog/top-5-fruit-festivals.html",
+          "uuid": "23b9b6898c8156a03827f1dd9bbb7cc5c6b6eb4f"
+        }
+      ]
+    },
+    {
+      "name": "'Gallery Page'",
+      "cluster": 12,
+      "pages": [
+        {
+          "url": "https://bnatural.in/shinchan/mixed-fruit.html",
+          "uuid": "19dbcfad8cd150aa671d269d907702d974dccc3b"
+        },
+        {
+          "url": "https://bnatural.in/shinchan/mango.html",
+          "uuid": "ca34273767900a93e9d26f8854544e7b07d0fea6"
+        }
+      ]
+    }
+  ]
+}
