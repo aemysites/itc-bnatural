@@ -1,48 +1,52 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Block header row as required
+  // Header row for Embed (embedVideo27)
   const headerRow = ['Embed (embedVideo27)'];
 
-  // Find the iframe for the embedded video
+  // Find the iframe (video embed)
   const iframe = element.querySelector('iframe');
   let videoUrl = '';
-  let videoTitle = '';
   if (iframe) {
-    // Extract video URL
-    if (iframe.src) {
-      const src = iframe.src;
-      const ytMatch = src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-      if (ytMatch && ytMatch[1]) {
-        videoUrl = `https://www.youtube.com/watch?v=${ytMatch[1]}`;
-      } else {
-        videoUrl = src;
-      }
-    }
-    // Extract video title
-    if (iframe.title) {
-      videoTitle = iframe.title;
+    // Extract the actual YouTube video URL from the embed src
+    const match = iframe.src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
+    } else if (iframe.src) {
+      videoUrl = iframe.src;
     }
   }
 
-  // Compose the cell content: video title (as text) and video link
+  // Extract visible text content from the element (e.g., video title)
+  let textContent = '';
+  // Try to get the iframe title first
+  if (iframe && iframe.title) {
+    textContent = iframe.title;
+  } else {
+    // Fallback: get any text from the element
+    textContent = element.textContent.trim();
+  }
+
+  // Create cell content: text (if any) and video link
   const cellContent = [];
-  if (videoTitle) {
-    cellContent.push(document.createTextNode(videoTitle));
+  if (textContent) {
+    const textEl = document.createElement('p');
+    textEl.textContent = textContent;
+    cellContent.push(textEl);
   }
   if (videoUrl) {
-    const link = document.createElement('a');
-    link.href = videoUrl;
-    link.textContent = videoUrl;
-    cellContent.push(link);
+    const videoLink = document.createElement('a');
+    videoLink.href = videoUrl;
+    videoLink.textContent = videoUrl;
+    cellContent.push(videoLink);
   }
 
-  // Table structure: header, then one cell with title and video link
-  const rows = [
-    headerRow,
-    [cellContent]
-  ];
+  // Content row: all cell content in a single cell
+  const contentRow = [cellContent];
 
-  // Create the block table and replace the original element
-  const block = WebImporter.DOMUtils.createTable(rows, document);
+  // Build the table
+  const cells = [headerRow, contentRow];
+  const block = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Replace the original element with the block table
   element.replaceWith(block);
 }

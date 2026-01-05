@@ -1,91 +1,64 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards14) block: 2 columns, multiple rows, first row is block name
+  // Cards (cards14) block: 2 columns, first row is header, subsequent rows are cards
   const headerRow = ['Cards (cards14)'];
   const rows = [headerRow];
 
-  // Find the card container (handles single or multiple cards)
-  // In this source, the card is inside .cmp-card__container
-  const cardContainers = element.querySelectorAll('.cmp-card__container');
+  // Find the card container(s)
+  // For this HTML, one card per .cmp-card--recipe-details
+  const cardContainers = [element]; // Defensive: treat the element itself as a card container
 
-  cardContainers.forEach(cardContainer => {
-    // Card link wrapper (for CTA, if needed)
-    const cardLink = cardContainer.querySelector('a[href]');
-
-    // --- Column 1: Image ---
-    // Get the image inside .cmp-card__media
+  cardContainers.forEach(card => {
+    // Image (mandatory, first cell)
+    // Find the <picture> or <img> inside .cmp-card__media
+    const media = card.querySelector('.cmp-card__media');
     let imageEl = null;
-    const mediaDiv = cardContainer.querySelector('.cmp-card__media');
-    if (mediaDiv) {
-      // Use the <img> inside <picture>
-      const img = mediaDiv.querySelector('img');
-      if (img) imageEl = img;
+    if (media) {
+      imageEl = media.querySelector('picture') || media.querySelector('img');
     }
 
-    // --- Column 2: Text Content ---
-    // Title (h4 inside .cmp-card__title)
-    let titleEl = null;
-    const infoDiv = cardContainer.querySelector('.cmp-card__info');
-    if (infoDiv) {
-      const titleDiv = infoDiv.querySelector('.cmp-card__title h4');
-      if (titleDiv) titleEl = titleDiv;
+    // Text content (mandatory, second cell)
+    // We'll assemble: title, description, details
+    const info = card.querySelector('.cmp-card__info');
+    const textContent = document.createElement('div');
+    if (info) {
+      // Title
+      const titleEl = info.querySelector('.cmp-card__title h4');
+      if (titleEl) {
+        textContent.appendChild(titleEl.cloneNode(true));
+      }
+      // Description
+      const descEl = info.querySelector('.cmp-card__description p');
+      if (descEl) {
+        textContent.appendChild(descEl.cloneNode(true));
+      }
+      // Details (Preparation, Serves, B Natural Drinks)
+      const details = info.querySelector('.cmp-card__details');
+      if (details) {
+        // We'll render the details as a horizontal row
+        const detailsRow = document.createElement('div');
+        detailsRow.style.display = 'flex';
+        detailsRow.style.gap = '2em';
+        Array.from(details.querySelectorAll('.cmp-card__details-content')).forEach(detail => {
+          const label = detail.querySelector('p');
+          const value = detail.querySelector('h4');
+          const detailCol = document.createElement('div');
+          if (label) detailCol.appendChild(label.cloneNode(true));
+          if (value) detailCol.appendChild(value.cloneNode(true));
+          detailsRow.appendChild(detailCol);
+        });
+        textContent.appendChild(detailsRow);
+      }
     }
 
-    // Description (p inside .cmp-card__description)
-    let descEl = null;
-    if (infoDiv) {
-      const descDiv = infoDiv.querySelector('.cmp-card__description p');
-      if (descDiv) descEl = descDiv;
-    }
-
-    // Details (Preparation, Serves, B Natural Drinks)
-    // Each detail is in .cmp-card__details-content
-    let detailsEl = null;
-    const detailsDiv = infoDiv ? infoDiv.querySelector('.cmp-card__details') : null;
-    if (detailsDiv) {
-      // We'll build a row of details as in the screenshot
-      const detailContents = detailsDiv.querySelectorAll('.cmp-card__details-content');
-      const detailsRow = document.createElement('div');
-      detailsRow.style.display = 'flex';
-      detailsRow.style.gap = '2em';
-      detailContents.forEach(detailContent => {
-        // Each detailContent has a label (p.body-4) and value (h4)
-        const label = detailContent.querySelector('p');
-        const value = detailContent.querySelector('h4');
-        const detailCol = document.createElement('div');
-        if (label) detailCol.appendChild(label.cloneNode(true));
-        if (value) detailCol.appendChild(value.cloneNode(true));
-        detailsRow.appendChild(detailCol);
-      });
-      detailsEl = detailsRow;
-    }
-
-    // Compose column 2 content
-    const col2Content = [];
-    if (titleEl) col2Content.push(titleEl);
-    if (descEl) col2Content.push(descEl);
-    if (detailsEl) col2Content.push(detailsEl);
-    // If the card is a link, wrap column 2 content in the link (except image)
-    let col2Final;
-    if (cardLink) {
-      // Only wrap text content, not the image
-      const link = document.createElement('a');
-      link.href = cardLink.getAttribute('href');
-      link.target = cardLink.getAttribute('target') || '_self';
-      col2Content.forEach(n => link.appendChild(n.cloneNode(true)));
-      col2Final = link;
-    } else {
-      col2Final = col2Content;
-    }
-
-    // Add row: [image, text content]
+    // Add the card row: [image, textContent]
     rows.push([
       imageEl,
-      col2Final
+      textContent
     ]);
   });
 
-  // Replace element with block table
+  // Create the block table
   const block = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(block);
 }

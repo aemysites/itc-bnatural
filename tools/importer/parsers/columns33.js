@@ -1,38 +1,25 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Header row for Columns block
-  const headerRow = ['Columns (columns33)'];
-
-  // Defensive: Find the main teaser block (the two columns)
-  // The teaser block contains both the left text and right image
+  // Find the main teaser block
   const teaser = element.querySelector('.cmp-teaser');
   if (!teaser) return;
 
-  // Left column: Description, lists, headings
+  // Extract left column: content
   const leftContent = teaser.querySelector('.cmp-teaser__content');
+  // Extract right column: image
+  const rightImage = teaser.querySelector('.cmp-teaser__image');
 
-  // Right column: Image
-  const rightImageContainer = teaser.querySelector('.cmp-teaser__image');
-  let rightImage = null;
-  if (rightImageContainer) {
-    // Find the actual image element
-    rightImage = rightImageContainer.querySelector('img');
-  }
+  // Defensive fallback for missing columns
+  const leftCell = leftContent || document.createElement('div');
+  const rightCell = rightImage || document.createElement('div');
 
-  // Compose the columns row
-  // Left column gets all left content (heading, lists, etc)
-  // Right column gets the image element only
-  const columnsRow = [
-    leftContent,
-    rightImage ? rightImage : document.createElement('div') // fallback empty div if no image
+  // Build table rows per Columns (columns33) spec
+  const rows = [
+    ['Columns (columns33)'],
+    [leftCell, rightCell],
   ];
 
-  // Build the table
-  const table = WebImporter.DOMUtils.createTable([
-    headerRow,
-    columnsRow
-  ], document);
-
-  // Replace original element with block table
+  // Create table and replace element
+  const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

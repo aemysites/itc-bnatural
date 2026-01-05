@@ -1,71 +1,63 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // 1. Header row
-  const headerRow = ['Columns (columns12)'];
-
-  // 2. Columns: logo (left), nav group 1 (center), nav group 2 (right-center), nav group 3 (right)
-  // Find the logo area
-  let logoCell = document.createElement('div');
-  const logoArea = element.querySelector('.cmp-footer__nav-logo');
-  if (logoArea) {
-    // Get all images in logo area
-    const imgs = logoArea.querySelectorAll('img');
-    imgs.forEach(img => logoCell.appendChild(img.cloneNode(true)));
-    // Get all visible text in logo area, including license and branding
-    // Specifically extract 'Enduring Value', 'FSSAI', and 'Lic. No. 10012051000312'
-    // These are likely in text nodes or spans/divs
-    // We'll grab all text nodes and filter for those containing these keywords
-    const walker = document.createTreeWalker(logoArea, NodeFilter.SHOW_TEXT, null);
-    const textFragments = [];
-    while (walker.nextNode()) {
-      const txt = walker.currentNode.textContent.trim();
-      if (txt && (
-        txt.includes('Enduring Value') ||
-        txt.includes('FSSAI') ||
-        txt.includes('Lic. No.') ||
-        txt.match(/\d{12,}/)
-      )) {
-        textFragments.push(txt);
-      }
+  // Helper: Get the logo column (leftmost), including all text content
+  const logoCol = (() => {
+    const navLogo = element.querySelector('.cmp-footer__nav-logo');
+    if (!navLogo) return '';
+    // Prefer desktop, fallback to mobile
+    const desktopDiv = navLogo.querySelector('.bnatural-footer-desktop-div');
+    const mobileDiv = navLogo.querySelector('.bnatural-footer-mobile-div');
+    const logoDiv = desktopDiv || mobileDiv;
+    if (!logoDiv) return '';
+    // Find the certification/license text under the logos
+    // It is in the parent .bnatural-footer-div, as text nodes or spans
+    const parentDiv = logoDiv.closest('.bnatural-footer-div');
+    const colDiv = document.createElement('div');
+    colDiv.appendChild(logoDiv.cloneNode(true));
+    if (parentDiv) {
+      // Find all elements or text nodes (excluding logoDiv) with visible text
+      Array.from(parentDiv.childNodes).forEach(n => {
+        if (n === logoDiv) return;
+        // Only include elements that are not divs (to avoid logoDiv and mobileDiv)
+        if (n.nodeType === Node.ELEMENT_NODE && n.tagName !== 'DIV' && n.textContent.trim()) {
+          colDiv.appendChild(n.cloneNode(true));
+        }
+        // Also include text nodes
+        if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+          const span = document.createElement('span');
+          span.textContent = n.textContent.trim();
+          colDiv.appendChild(span);
+        }
+      });
     }
-    // Place each found line in its own div for clarity
-    [...new Set(textFragments)].forEach(line => {
-      const textDiv = document.createElement('div');
-      textDiv.textContent = line;
-      logoCell.appendChild(textDiv);
-    });
-  }
+    return colDiv;
+  })();
 
-  // Find navigation columns (visible ones only)
-  const navArea = element.querySelector('.cmp-footer__nav');
-  let navCells = [];
-  if (navArea) {
-    // Only consider nav-items with style display: block
-    const navGroups = Array.from(navArea.querySelectorAll('.cmp-footer_nav-items')).filter(
+  // Helper: Get navigation columns (3 columns)
+  const navCols = (() => {
+    const navContainer = element.querySelector('.cmp-footer__nav');
+    if (!navContainer) return [];
+    // Only visible navigation groups (display: block)
+    const navGroups = Array.from(navContainer.querySelectorAll('.cmp-footer_nav-items')).filter(
       ng => ng.style.display === 'block'
     );
-    // Defensive: Only keep groups that have links (ul > li)
-    navGroups.forEach(group => {
-      // Find the .links div inside
-      const linksDiv = group.querySelector('.links');
-      if (linksDiv && linksDiv.querySelectorAll('li').length > 0) {
-        navCells.push(linksDiv);
-      }
+    // For each group, get its navigation list
+    return navGroups.map(group => {
+      const navList = group.querySelector('ul.cmp-navigation__group');
+      if (!navList || navList.children.length === 0) return '';
+      return navList.cloneNode(true);
     });
-  }
+  })();
 
-  // Defensive: If navCells < 3, fill with empty cells
-  while (navCells.length < 3) {
-    navCells.push(document.createElement('div'));
-  }
+  // Table header row
+  const headerRow = ['Columns (columns12)'];
+  // Table content row: 4 columns (logo + 3 nav columns)
+  const contentRow = [logoCol, ...navCols];
 
-  // 3. Build table rows
-  const cells = [
-    headerRow,
-    [logoCell, ...navCells]
-  ];
+  // Build the block table
+  const cells = [headerRow, contentRow];
+  const block = WebImporter.DOMUtils.createTable(cells, document);
 
-  // 4. Create table and replace
-  const table = WebImporter.DOMUtils.createTable(cells, document);
-  element.replaceWith(table);
+  // Replace the original element
+  element.replaceWith(block);
 }

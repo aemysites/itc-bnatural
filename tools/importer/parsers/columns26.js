@@ -1,81 +1,56 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Helper to extract teaser content and image for each story
-  function extractTeaserCells(teaserEl) {
-    const content = teaserEl.querySelector('.cmp-teaser__content');
-    let desc = null;
-    if (content) {
-      desc = document.createElement('div');
-      const descBlock = content.querySelector('.cmp-teaser__description');
-      if (descBlock) {
-        Array.from(descBlock.childNodes).forEach(node => {
-          desc.appendChild(node.cloneNode(true));
-        });
-      }
-      const action = content.querySelector('.cmp-teaser__action-container');
-      if (action) {
-        desc.appendChild(action.cloneNode(true));
-      }
+  // Helper to extract teaser content and images
+  function extractTeaserContent(teaser) {
+    // Description (heading + paragraph)
+    const desc = teaser.querySelector('.cmp-teaser__description');
+    // CTA/action (optional)
+    const action = teaser.querySelector('.cmp-teaser__action-container');
+    // Main image (first .cmp-image picture)
+    const mainImgPicture = teaser.querySelector('.cmp-teaser__image .cmp-image picture');
+    // Small image (optional, .cmp-animation picture)
+    const smallImgPicture = teaser.querySelector('.cmp-animation picture');
+    // Compose left and right cell content
+    let leftContent, rightContent;
+    // Determine alignment by class
+    const isLeftImage = teaser.closest('.teaser')?.classList.contains('cmp-teaser--left-image-aligned');
+    if (isLeftImage) {
+      // Image left, text right
+      leftContent = document.createElement('div');
+      if (mainImgPicture) leftContent.append(mainImgPicture.cloneNode(true));
+      if (smallImgPicture) leftContent.append(smallImgPicture.cloneNode(true));
+      rightContent = document.createElement('div');
+      if (desc) rightContent.append(desc.cloneNode(true));
+      if (action) rightContent.append(action.cloneNode(true));
+    } else {
+      // Text left, image right
+      leftContent = document.createElement('div');
+      if (desc) leftContent.append(desc.cloneNode(true));
+      if (action) leftContent.append(action.cloneNode(true));
+      rightContent = document.createElement('div');
+      if (mainImgPicture) rightContent.append(mainImgPicture.cloneNode(true));
+      if (smallImgPicture) rightContent.append(smallImgPicture.cloneNode(true));
     }
-    let mainImg = null;
-    const imgWrap = teaserEl.querySelector('.cmp-teaser__image');
-    if (imgWrap) {
-      const cmpImage = imgWrap.querySelector('.cmp-image img');
-      if (cmpImage) mainImg = cmpImage;
-      const smallImg = imgWrap.querySelector('.cmp-animation img');
-      if (mainImg && smallImg) {
-        const imgDiv = document.createElement('div');
-        imgDiv.appendChild(mainImg.cloneNode(true));
-        imgDiv.appendChild(smallImg.cloneNode(true));
-        mainImg = imgDiv;
-      }
-    }
-    return [desc, mainImg];
+    return [leftContent, rightContent];
   }
 
-  const cmpOurStory = element.querySelector('.cmp-our-story');
-  const teasers = Array.from(cmpOurStory ? cmpOurStory.children : []).filter(child => child.classList.contains('teaser'));
-  if (teasers.length === 0) {
-    Array.from(element.children).forEach(child => {
-      if (child.classList.contains('teaser')) teasers.push(child);
-    });
-  }
-
-  const headerRow = ['Columns (columns26)'];
-  const rows = [headerRow];
-  teasers.forEach((teaser) => {
-    const [desc, img] = extractTeaserCells(teaser);
-    rows.push([desc, img]);
+  // Find all top-level teasers
+  const teasers = Array.from(element.querySelectorAll(':scope .cmp-our-story > .teaser'));
+  // Build rows for each teaser
+  const rows = teasers.map(teaser => {
+    const [left, right] = extractTeaserContent(teaser);
+    return [left, right];
   });
 
-  // Add the final product gallery/footer row if present
-  // Look for a sequence of product images and a glass of juice
-  let productRow = null;
-  // Try to find a div with at least 7 images (products + glass)
-  let galleryDivCandidate = null;
-  if (cmpOurStory) {
-    const children = Array.from(cmpOurStory.children);
-    galleryDivCandidate = children.find(child => {
-      const imgs = child.querySelectorAll('img');
-      return imgs.length >= 7;
-    });
-  }
-  if (!galleryDivCandidate) {
-    // fallback: look for a div with >=7 images anywhere in the block
-    galleryDivCandidate = Array.from(element.querySelectorAll('div')).find(div => div.querySelectorAll('img').length >= 7);
-  }
-  if (galleryDivCandidate) {
-    const imgs = galleryDivCandidate.querySelectorAll('img');
-    if (imgs.length) {
-      const galleryDiv = document.createElement('div');
-      imgs.forEach(img => galleryDiv.appendChild(img.cloneNode(true)));
-      productRow = [galleryDiv, ''];
-    }
-  }
-  if (productRow) {
-    rows.push(productRow);
-  }
+  // Header row
+  const headerRow = ['Columns (columns26)'];
 
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Build table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...rows
+  ], document);
+
+  // Replace element
   element.replaceWith(table);
 }

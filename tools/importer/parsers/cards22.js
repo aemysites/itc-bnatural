@@ -1,45 +1,37 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards22) block parser
-  // 1. Header row
+  // Cards block header
   const headerRow = ['Cards (cards22)'];
 
-  // 2. Find all card anchor elements (each card is inside an <a> tag)
-  const cardAnchors = Array.from(element.querySelectorAll('a'));
+  // Find all card anchor elements (each card is wrapped in an <a>)
+  const cardLinks = element.querySelectorAll('a');
 
-  // 3. Build card rows
-  const cardRows = cardAnchors.map((anchor) => {
-    // Image: find <img> inside <picture> inside .cmp-card__media
-    const media = anchor.querySelector('.cmp-card__media');
-    let imgEl = null;
-    if (media) {
-      const picture = media.querySelector('picture');
-      if (picture) {
-        imgEl = picture.querySelector('img');
-      }
+  // Build card rows
+  const rows = Array.from(cardLinks).map(card => {
+    // Image: Find the <img> inside the card
+    const img = card.querySelector('img');
+    // Title: Find the <h3> inside the card
+    const title = card.querySelector('h3');
+
+    // Defensive: fallback to text if <h3> is missing
+    let textContent;
+    if (title) {
+      // Use heading element directly
+      textContent = title;
+    } else {
+      // Use text from card
+      textContent = document.createElement('div');
+      textContent.textContent = card.textContent.trim();
     }
 
-    // Text: find card title inside .cmp-card__title > h3
-    let titleEl = null;
-    const titleDiv = anchor.querySelector('.cmp-card__title');
-    if (titleDiv) {
-      titleEl = titleDiv.querySelector('h3');
-    }
-
-    // Compose cell contents
-    // First cell: image element (mandatory)
-    // Second cell: title element (mandatory)
-    const imageCell = imgEl ? imgEl : '';
-    const textCell = titleEl ? titleEl : '';
-    return [imageCell, textCell];
+    // First cell: image, second cell: title (as heading)
+    return [img, textContent];
   });
 
-  // 4. Assemble table rows
-  const rows = [headerRow, ...cardRows];
+  // Compose table
+  const cells = [headerRow, ...rows];
+  const block = WebImporter.DOMUtils.createTable(cells, document);
 
-  // 5. Create block table
-  const blockTable = WebImporter.DOMUtils.createTable(rows, document);
-
-  // 6. Replace original element with block table
-  element.replaceWith(blockTable);
+  // Replace the original element
+  element.replaceWith(block);
 }

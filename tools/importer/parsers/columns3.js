@@ -1,48 +1,38 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Find the main content container (with cmp-teaser__content)
+  // Header row for the block
+  const headerRow = ['Columns (columns3)'];
+
+  // --- LEFT COLUMN ---
   const contentDiv = element.querySelector('.cmp-teaser__content');
-  if (!contentDiv) return;
+  const logoPicture = contentDiv?.querySelector('.cmp-teaser__image picture');
+  const descDiv = contentDiv?.querySelector('.cmp-teaser__description');
+  const cta = contentDiv?.querySelector('.cmp-teaser__action-link');
 
-  // Get the parent of cmp-teaser__content (the actual .cmp-teaser block)
-  const teaserBlock = contentDiv.closest('.cmp-teaser');
+  // Compose left column content
+  const leftColContent = document.createElement('div');
+  if (logoPicture) leftColContent.appendChild(logoPicture);
+  if (descDiv) leftColContent.appendChild(descDiv);
+  if (cta) leftColContent.appendChild(cta);
 
-  // Get the left column content (logo, heading, paragraph, button)
-  const teaserContent = teaserBlock.querySelector('.cmp-teaser__content');
-
-  // Logo image (Nutrilite logo)
-  const logoDiv = teaserContent.querySelector('.cmp-teaser__image picture');
-  // Heading & Paragraph
-  const descDiv = teaserContent.querySelector('.cmp-teaser__description');
-  // CTA Button
-  const ctaDiv = teaserContent.querySelector('.cmp-teaser__action-container');
-
-  // Compose left column cell
-  const leftColumn = document.createElement('div');
-  if (logoDiv) leftColumn.appendChild(logoDiv.cloneNode(true));
-  if (descDiv) leftColumn.appendChild(descDiv.cloneNode(true));
-  if (ctaDiv) leftColumn.appendChild(ctaDiv.cloneNode(true));
-
-  // Find the right column image container (the second .cmp-teaser__image inside .cmp-teaser)
-  const teaserImages = teaserBlock.querySelectorAll('.cmp-teaser__image');
-  const productImageDiv = teaserImages.length > 1 ? teaserImages[1] : null;
-
-  // Compose right column cell with all product images/cards
-  const rightColumn = document.createElement('div');
-  if (productImageDiv) {
-    // Collect all <img> elements inside productImageDiv (including nested <picture> wrappers)
-    const imgs = productImageDiv.querySelectorAll('img');
-    imgs.forEach(function(img) {
-      rightColumn.appendChild(img.cloneNode(true));
-    });
+  // --- RIGHT COLUMN ---
+  // Find the second .cmp-teaser__image (contains the main product image)
+  const teaserImages = Array.from(element.querySelectorAll('.cmp-teaser__image'));
+  let rightColContent = document.createElement('div');
+  if (teaserImages.length > 1) {
+    const secondImageDiv = teaserImages[1];
+    const productPicture = secondImageDiv.querySelector('picture');
+    if (productPicture) rightColContent.appendChild(productPicture);
   }
 
-  // Table structure: header, then two columns (left: logo/text/button, right: product images/cards)
-  const cells = [
-    ['Columns (columns3)'],
-    [leftColumn, rightColumn]
+  // Build the table rows
+  const rows = [
+    headerRow,
+    [leftColContent, rightColContent]
   ];
 
-  const table = WebImporter.DOMUtils.createTable(cells, document);
+  // Create the table
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Replace the original element
   element.replaceWith(table);
 }

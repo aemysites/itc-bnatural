@@ -1,69 +1,63 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards41) block: 2 columns, multiple rows
-  // Header row
+  // Cards (cards41) block header
   const headerRow = ['Cards (cards41)'];
+
+  // Find all anchor tags that contain card content
+  const cardLinks = Array.from(element.querySelectorAll('a'));
+
   const rows = [headerRow];
 
-  // Find the card container
-  const container = element.querySelector('.cmp-card__container');
-  if (!container) return;
-
-  // Each card is an <a> containing .cmp-card__content
-  const cardLinks = Array.from(container.querySelectorAll(':scope > a'));
-
   cardLinks.forEach((cardLink) => {
-    // Card content root
+    // Find the card content container
     const cardContent = cardLink.querySelector('.cmp-card__content');
     if (!cardContent) return;
 
-    // --- Image cell ---
-    // Find the image inside .cmp-card__media
-    const media = cardContent.querySelector('.cmp-card__media');
-    let imageEl = null;
-    if (media) {
-      // Use the <img> inside <picture>
-      const img = media.querySelector('img');
-      if (img) imageEl = img;
+    // --- IMAGE CELL ---
+    // Find the image inside the card
+    const picture = cardContent.querySelector('picture');
+    let imgEl = null;
+    if (picture) {
+      imgEl = picture.querySelector('img');
     }
+    // Defensive: fallback to null if not found
+    const imageCell = imgEl ? imgEl : '';
 
-    // --- Text cell ---
-    // Compose a div with title, description, and details
-    const info = cardContent.querySelector('.cmp-card__info');
-    const textCell = document.createElement('div');
-
-    // Title
-    const titleH4 = info && info.querySelector('.cmp-card__title h4');
-    if (titleH4) textCell.appendChild(titleH4);
-
-    // Description
-    const descP = info && info.querySelector('.cmp-card__description p');
-    if (descP) textCell.appendChild(descP);
-
-    // Details section (Preparation, Serves, B Natural Drinks)
-    const details = info && info.querySelector('.cmp-card__details');
-    if (details) {
-      // We'll render the details as a row of three items
-      const detailsRow = document.createElement('div');
-      Array.from(details.querySelectorAll('.cmp-card__details-content')).forEach((detailContent) => {
-        // Each detailContent has a label (p.body-4) and value (h4)
-        const label = detailContent.querySelector('p.body-4');
-        const value = detailContent.querySelector('h4');
-        if (label && value) {
-          const detailDiv = document.createElement('div');
-          detailDiv.appendChild(label);
-          detailDiv.appendChild(value);
-          detailsRow.appendChild(detailDiv);
-        }
+    // --- TEXT CELL ---
+    // Title (h4)
+    const titleEl = cardContent.querySelector('.cmp-card__title h4');
+    // Description (p.body-2)
+    const descEl = cardContent.querySelector('.cmp-card__description p.body-2');
+    // Details (Preparation, Serves, B Natural Drinks)
+    const detailsContainer = cardContent.querySelector('.cmp-card__details');
+    let detailsRow = null;
+    if (detailsContainer) {
+      // Each details-content is a row
+      const detailRows = Array.from(detailsContainer.querySelectorAll('.cmp-card__details-content'));
+      detailsRow = document.createElement('div');
+      detailsRow.style.display = 'flex';
+      detailsRow.style.gap = '2em';
+      detailRows.forEach((row) => {
+        const label = row.querySelector('p.body-4');
+        const value = row.querySelector('h4');
+        const span = document.createElement('span');
+        if (label) span.appendChild(label.cloneNode(true));
+        if (value) span.appendChild(value.cloneNode(true));
+        detailsRow.appendChild(span);
       });
-      textCell.appendChild(detailsRow);
     }
 
-    // Add row: [image, textCell]
-    rows.push([imageEl, textCell]);
+    // Compose the text cell: Title, Description, Details
+    const textCellContent = [];
+    if (titleEl) textCellContent.push(titleEl);
+    if (descEl) textCellContent.push(descEl);
+    if (detailsRow) textCellContent.push(detailsRow);
+
+    rows.push([imageCell, textCellContent]);
   });
 
-  // Create block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(block);
+  // Create the block table
+  const blockTable = WebImporter.DOMUtils.createTable(rows, document);
+  // Replace the original element
+  element.replaceWith(blockTable);
 }

@@ -1,38 +1,36 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Header row for the block
+  // Header row for the Columns block
   const headerRow = ['Columns (columns11)'];
 
-  // Defensive: Get immediate children
-  const children = Array.from(element.querySelectorAll(':scope > div'));
-
-  // Find logo image (left column)
-  let logoImg = null;
-  const logoDiv = children.find(div => div.classList.contains('cmp-product-list__logo'));
+  // Extract left column: logo image
+  const logoDiv = element.querySelector('.cmp-product-list__logo');
+  let logoImg = '';
   if (logoDiv) {
-    logoImg = logoDiv.querySelector('img');
+    const img = logoDiv.querySelector('img');
+    if (img) logoImg = img;
   }
 
-  // Find heading and description (right column)
-  let headingContent = [];
-  const headingDiv = children.find(div => div.classList.contains('cmp-product-list__heading'));
+  // Extract right column: heading and description
+  const headingDiv = element.querySelector('.cmp-product-list__heading');
+  let rightColumn = '';
   if (headingDiv) {
-    // Grab heading (h2) and description (p)
-    const h2 = headingDiv.querySelector('h2');
-    const p = headingDiv.querySelector('p');
-    if (h2) headingContent.push(h2);
-    if (p) headingContent.push(p);
+    // Collect all element children (h2, p, etc.)
+    rightColumn = document.createElement('div');
+    Array.from(headingDiv.children).forEach(child => {
+      rightColumn.appendChild(child);
+    });
   }
 
-  // Build columns row: [logo image, heading+description]
-  const columnsRow = [logoImg, headingContent];
+  // Compose columns row
+  const columnsRow = [logoImg, rightColumn];
 
-  // Compose table rows
-  const rows = [headerRow, columnsRow];
+  // Build the table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    columnsRow,
+  ], document);
 
-  // Create table block
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-
-  // Replace original element
-  element.replaceWith(block);
+  // Replace the original element with the new table
+  element.replaceWith(table);
 }

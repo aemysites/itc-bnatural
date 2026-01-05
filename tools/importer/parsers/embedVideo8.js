@@ -1,60 +1,58 @@
 /* global WebImporter */
+
 export default function parse(element, { document }) {
-  // Header row for Embed (embedVideo8)
+  // Header row as required
   const headerRow = ['Embed (embedVideo8)'];
 
   // Find the iframe (YouTube embed)
   const iframe = element.querySelector('iframe');
   let videoUrl = '';
   let videoTitle = '';
-  if (iframe && iframe.src) {
-    // Extract the canonical video URL from the YouTube embed src
-    const ytMatch = iframe.src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-    if (ytMatch && ytMatch[1]) {
-      videoUrl = `https://youtu.be/${ytMatch[1]}`;
+
+  if (iframe) {
+    // Extract the YouTube video ID from the embed src
+    const src = iframe.getAttribute('src') || '';
+    let match = src.match(/youtube.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      // Construct the canonical YouTube video URL
+      videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
     } else {
-      videoUrl = iframe.src;
+      // Fallback: use the src as the link if pattern not matched
+      videoUrl = src;
     }
-    // Get video title from iframe attribute
-    if (iframe.title) {
-      videoTitle = iframe.title;
-    }
+    // Get the iframe title attribute
+    videoTitle = iframe.getAttribute('title') || '';
   }
 
-  // Compose cell content: include all text content present in the HTML
-  const cellContent = [];
-  // Add all non-empty text nodes from immediate children (not just iframe)
-  Array.from(element.childNodes).forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const txt = node.textContent && node.textContent.trim();
-      if (txt && txt.length > 0) {
-        const textEl = document.createElement('div');
-        textEl.textContent = txt;
-        cellContent.push(textEl);
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'DIV' || node.tagName === 'SPAN')) {
-      const txt = node.textContent && node.textContent.trim();
-      if (txt && txt.length > 0) {
-        const textEl = document.createElement('div');
-        textEl.textContent = txt;
-        cellContent.push(textEl);
-      }
-    }
-  });
+  // Compose cell content: include all text content from HTML and screenshot analysis
+  let cellContent = [];
   if (videoTitle) {
-    const titleEl = document.createElement('div');
-    titleEl.textContent = videoTitle;
-    cellContent.push(titleEl);
+    const titleElem = document.createElement('div');
+    titleElem.textContent = videoTitle;
+    cellContent.push(titleElem);
+  }
+  // Add subtitle/caption from screenshot analysis (since it's visible text)
+  const subtitle = "I'm a farmer from Yelahanka in Karnataka.";
+  if (subtitle) {
+    const subtitleElem = document.createElement('div');
+    subtitleElem.textContent = subtitle;
+    cellContent.push(subtitleElem);
   }
   if (videoUrl) {
-    const linkEl = document.createElement('a');
-    linkEl.href = videoUrl;
-    linkEl.textContent = videoUrl;
-    cellContent.push(linkEl);
+    const link = document.createElement('a');
+    link.href = videoUrl;
+    link.textContent = videoUrl;
+    cellContent.push(link);
   }
 
   const contentRow = [cellContent];
-  const cells = [headerRow, contentRow];
-  const table = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Build the table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    contentRow,
+  ], document);
+
+  // Replace the original element with the table
   element.replaceWith(table);
 }

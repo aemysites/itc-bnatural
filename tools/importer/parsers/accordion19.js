@@ -1,58 +1,69 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header
-  const headerRow = ['Accordion (accordion19)'];
-  const rows = [headerRow];
+  // Create header row: single cell, but set colspan=2
+  const headerRow = [document.createElement('th')];
+  headerRow[0].textContent = 'Accordion (accordion19)';
+  headerRow[0].setAttribute('colspan', '2');
 
   // Find all accordion items
-  const items = element.querySelectorAll('.cmp-accordion__item');
+  const items = Array.from(element.querySelectorAll('.cmp-accordion__item'));
 
-  items.forEach((item) => {
-    // Title: find the button and its title span
-    let title = '';
+  // Prepare rows for each accordion item
+  const rows = items.map(item => {
+    // Title: find the button and extract the title span
     const button = item.querySelector('button.cmp-accordion__button');
+    let title = '';
     if (button) {
       const titleSpan = button.querySelector('.cmp-accordion__title');
-      if (titleSpan) {
-        title = titleSpan.textContent.trim();
-      } else {
-        title = button.textContent.trim();
-      }
+      title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
     }
-
-    // Content: find the panel and extract only the relevant content (not all container divs)
-    let content = '';
+    // Content: find the panel and grab its content
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
+    let content = '';
     if (panel) {
-      // Look for direct text, <ul>, <ol>, <p>, or .cmp-text inside the panel
-      let found = panel.querySelector('.cmp-text');
-      if (found) {
-        // Use only the children of .cmp-text (usually <ul> or <p>)
-        if (found.children.length === 1) {
-          content = found.children[0];
-        } else if (found.children.length > 1) {
-          content = Array.from(found.children);
+      const contentContainer = panel.querySelector('.cmp-container');
+      if (contentContainer) {
+        const textBlocks = Array.from(contentContainer.querySelectorAll('.cmp-text'));
+        if (textBlocks.length === 1) {
+          content = textBlocks[0];
+        } else if (textBlocks.length > 1) {
+          const wrapper = document.createElement('div');
+          textBlocks.forEach(tb => wrapper.appendChild(tb));
+          content = wrapper;
         } else {
-          content = found;
+          content = contentContainer;
         }
       } else {
-        // Fallback: look for <ul>, <ol>, <p> directly inside panel
-        const directContent = panel.querySelector('ul, ol, p');
-        if (directContent) {
-          content = directContent;
-        } else {
-          // Fallback: use panel's textContent if nothing else found
-          content = panel.textContent.trim();
-        }
+        content = panel;
       }
     }
-
-    // Push row: title (string), content (element or array)
-    rows.push([title, content]);
+    return [title, content];
   });
 
-  // Create the table block
-  const block = WebImporter.DOMUtils.createTable(rows, document);
+  // Build table manually to ensure correct header row
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  trHead.appendChild(headerRow[0]);
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(cell => {
+      const td = document.createElement('td');
+      if (typeof cell === 'string') {
+        td.textContent = cell;
+      } else if (cell instanceof Element) {
+        td.appendChild(cell);
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
   // Replace original element
-  element.replaceWith(block);
+  element.replaceWith(table);
 }

@@ -1,46 +1,41 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Find .cmp-teaser inside the block
-  const teaser = element.querySelector('.cmp-teaser');
-  if (!teaser) return;
-
-  // Get image (background or prominent image)
-  const teaserImageDiv = teaser.querySelector('.cmp-teaser__image');
-  let image = '';
-  if (teaserImageDiv) {
-    const img = teaserImageDiv.querySelector('img');
-    if (img) image = img;
+  // Helper to find the image (background)
+  function findHeroImage(el) {
+    const img = el.querySelector('.cmp-teaser__image img');
+    return img || '';
   }
 
-  // Get text content
-  const teaserDescriptionDiv = teaser.querySelector('.cmp-teaser__content .cmp-teaser__description');
-  let textNodes = [];
-  if (teaserDescriptionDiv) {
-    // Only keep heading tags and non-empty paragraphs (do NOT promote paragraph to heading)
-    const children = Array.from(teaserDescriptionDiv.childNodes);
-    children.forEach(n => {
-      if (n.nodeType === 1 && /^H[1-6]$/.test(n.tagName)) {
-        textNodes.push(n);
-      } else if (n.nodeType === 1 && n.tagName === 'P' && n.textContent.trim()) {
-        textNodes.push(n);
-      } else if (n.nodeType === 3 && n.textContent.trim()) {
-        textNodes.push(n);
+  // Extract all non-empty children from .cmp-teaser__description
+  // Promote first non-empty paragraph to heading ONLY if no heading exists
+  function extractTextWithHeading(el) {
+    const desc = el.querySelector('.cmp-teaser__description');
+    if (!desc) return [];
+    const children = Array.from(desc.children).filter(child => child.textContent.trim());
+    if (!children.length) return [];
+    // Check if any heading exists
+    const hasHeading = children.some(child => /^H[1-3]$/.test(child.tagName));
+    if (!hasHeading) {
+      // Promote first non-empty paragraph to heading
+      if (children[0].tagName === 'P') {
+        const h = document.createElement('h1');
+        h.textContent = children[0].textContent;
+        children[0] = h;
       }
-    });
-    if (textNodes.length === 0) textNodes = [''];
-  } else {
-    textNodes = [''];
+    }
+    return children;
   }
 
-  // Compose table rows
   const headerRow = ['Hero (hero9)'];
-  const imageRow = [image];
-  const textRow = [textNodes];
+  const image = findHeroImage(element);
+  const textContent = extractTextWithHeading(element);
 
-  // Create the table block
-  const cells = [headerRow, imageRow, textRow];
-  const block = WebImporter.DOMUtils.createTable(cells, document);
+  const rows = [
+    headerRow,
+    [image ? image : ''],
+    [textContent.length ? textContent : '']
+  ];
 
-  // Replace the original element
-  element.replaceWith(block);
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

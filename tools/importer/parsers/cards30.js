@@ -1,41 +1,59 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards30) block parsing
+  // Cards (cards30) block header
   const headerRow = ['Cards (cards30)'];
-  const rows = [headerRow];
 
-  // Find all card anchor elements (each card is wrapped in an <a>)
+  // Select all card anchor elements (each card is an <a> with .cmp-card__content)
   const cardLinks = Array.from(element.querySelectorAll('a'));
 
-  cardLinks.forEach((cardLink) => {
-    // Defensive: look for the card content container
-    const cardContent = cardLink.querySelector('.cmp-card__content');
-    if (!cardContent) return;
+  // Helper to get overlay text from image area (if present)
+  function getOverlayText(card) {
+    const media = card.querySelector('.cmp-card__media');
+    if (!media) return null;
+    // Look for overlay text: direct children that are not <picture>, and text nodes
+    let overlayText = '';
+    // Check for direct text nodes
+    Array.from(media.childNodes)
+      .filter((node) => node.nodeType === 3 && node.textContent.trim())
+      .forEach((node) => {
+        overlayText += node.textContent.trim() + '\n';
+      });
+    // Check for elements (not <picture>)
+    Array.from(media.children)
+      .filter((el) => el.tagName !== 'PICTURE')
+      .forEach((el) => {
+        overlayText += el.textContent.trim() + '\n';
+      });
+    return overlayText.trim() || null;
+  }
 
-    // --- IMAGE CELL ---
-    // Find the image inside the card
-    let imgEl = cardContent.querySelector('img');
-    let imageCell = imgEl ? imgEl : '';
-
-    // --- TEXT CELL ---
-    // Compose the text cell: date/category, title, description (NO CTA link)
-    const info = cardContent.querySelector('.cmp-card__info');
-    let textCellContent = [];
-
-    // Date/category line
-    const dateEl = info && info.querySelector('.cmp-card__title p');
-    if (dateEl) textCellContent.push(dateEl);
-
-    // Title (h4)
-    const titleEl = info && info.querySelector('.cmp-card__description h4');
-    if (titleEl) textCellContent.push(titleEl);
-
-    // Do NOT add a CTA link, as none is present in the screenshot or HTML
-    rows.push([imageCell, textCellContent]);
+  // Build card rows
+  const rows = cardLinks.map((a) => {
+    // Find image (inside <picture> tag)
+    const img = a.querySelector('img');
+    // Find card info
+    const info = a.querySelector('.cmp-card__info');
+    let textContent = [];
+    // Overlay text (if present)
+    const overlay = getOverlayText(a);
+    if (overlay) {
+      textContent.push(document.createTextNode(overlay));
+    }
+    if (info) {
+      // Date/category (may be <p> inside .cmp-card__title)
+      const date = info.querySelector('.cmp-card__title p');
+      if (date) textContent.push(date);
+      // Title (may be <h4> inside .cmp-card__description)
+      const title = info.querySelector('.cmp-card__description h4');
+      if (title) textContent.push(title);
+    }
+    return [img, textContent];
   });
 
-  // Create the table block
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  // Replace the original element with the block
-  element.replaceWith(block);
+  // Assemble table
+  const cells = [headerRow, ...rows];
+  const table = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Replace original element
+  element.replaceWith(table);
 }

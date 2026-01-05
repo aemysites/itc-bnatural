@@ -1,93 +1,71 @@
 /* global WebImporter */
+
 export default function parse(element, { document }) {
-  // Always start with the block header row
+  // Carousel (carousel39) block header
   const headerRow = ['Carousel (carousel39)'];
   const rows = [headerRow];
 
-  // Defensive: find carousel content container
-  const carouselContent = element.querySelector('.cmp-carousel__content');
-  if (!carouselContent) {
-    element.replaceWith(WebImporter.DOMUtils.createTable(rows, document));
-    return;
-  }
+  // Find the carousel content container
+  const content = element.querySelector('.cmp-carousel__content');
+  if (!content) return;
 
-  // Find all carousel slides (items)
-  const items = Array.from(carouselContent.querySelectorAll('.cmp-carousel__item'));
+  // Get all carousel items (slides)
+  const slides = content.querySelectorAll('.cmp-carousel__item');
 
-  items.forEach((item) => {
-    let imageCell = null;
-    let textCell = null;
+  slides.forEach((slide) => {
+    let imageCell = '';
+    let textCell = '';
 
-    // Try to find an image for the slide
-    const img = item.querySelector('img');
-    if (img) {
-      imageCell = img;
-    }
-
-    // Try to find video for the slide
-    const video = item.querySelector('video');
-    if (!imageCell && video && video.src) {
-      const link = document.createElement('a');
-      link.href = video.src;
-      link.textContent = video.src;
-      imageCell = link;
-    }
-
-    // Defensive: If no image or video, skip this slide
-    if (!imageCell) return;
-
-    // Extract all visible text content from the slide, including branding and product names
-    // Remove navigation/actions/indicators from a clone
-    const clone = item.cloneNode(true);
-    Array.from(clone.querySelectorAll('.cmp-carousel__actions, .cmp-carousel__indicators, img, video, picture')).forEach(e => e.remove());
-
-    // Get all text nodes from the clone
-    let textNodes = [];
-    function getTextNodes(node) {
-      node.childNodes.forEach(child => {
-        if (child.nodeType === 3 && child.textContent.trim()) {
-          textNodes.push(child.textContent.trim());
-        } else if (child.nodeType === 1) {
-          getTextNodes(child);
-        }
-      });
-    }
-    getTextNodes(clone);
-
-    // Get all alt text from images in the slide
-    let altTexts = [];
-    Array.from(item.querySelectorAll('img')).forEach(imgEl => {
-      if (imgEl.alt && imgEl.alt.trim()) {
-        altTexts.push(imgEl.alt.trim());
-      }
-    });
-
-    // Get all aria-labels from the slide and descendants
-    let ariaLabels = [];
-    Array.from(item.querySelectorAll('[aria-label]')).forEach(el => {
-      if (el.getAttribute('aria-label') && el.getAttribute('aria-label').trim()) {
-        ariaLabels.push(el.getAttribute('aria-label').trim());
-      }
-    });
-    if (item.getAttribute('aria-label') && item.getAttribute('aria-label').trim()) {
-      ariaLabels.push(item.getAttribute('aria-label').trim());
-    }
-
-    // Combine all extracted text
-    let allText = [...altTexts, ...ariaLabels, ...textNodes].join(' ').replace(/\s+/g, ' ').trim();
-
-    if (allText) {
-      const p = document.createElement('p');
-      p.textContent = allText;
-      textCell = [p];
+    // 1. Image or Video Cell
+    const video = slide.querySelector('video');
+    if (video) {
+      // For videos: create a link to the video source
+      const videoLink = document.createElement('a');
+      videoLink.href = video.src;
+      videoLink.textContent = video.src;
+      imageCell = videoLink;
     } else {
-      textCell = '';
+      // For images: find the <img> element
+      const img = slide.querySelector('img');
+      if (img) {
+        imageCell = img;
+      }
+    }
+
+    // 2. Text Cell - Extract all visible text content from the slide
+    // Only include actual visible text, not aria-label or alt unless it's visually present
+    const textFragments = [];
+    // Get all visible text nodes inside the slide (excluding script/style)
+    slide.querySelectorAll('*:not(script):not(style)').forEach((el) => {
+      if (el.childNodes.length) {
+        el.childNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const txt = node.textContent.trim();
+            if (txt) textFragments.push(txt);
+          }
+        });
+      }
+    });
+    // Additionally, for this carousel, branding and product names may be outside the slide but visually present
+    // Try to extract visible text from the logo area outside the slide
+    const logoArea = element.querySelectorAll('img[alt], [class*=logo], [class*=brand]');
+    logoArea.forEach((el) => {
+      if (el.alt && !textFragments.includes(el.alt.trim())) {
+        textFragments.push(el.alt.trim());
+      }
+      if (el.textContent && el.textContent.trim() && !textFragments.includes(el.textContent.trim())) {
+        textFragments.push(el.textContent.trim());
+      }
+    });
+    // Join all text fragments into a single string
+    if (textFragments.length) {
+      textCell = textFragments.join(' ');
     }
 
     rows.push([imageCell, textCell]);
   });
 
-  // Create the block table and replace the original element
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(block);
+  // Create the table and replace the element
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

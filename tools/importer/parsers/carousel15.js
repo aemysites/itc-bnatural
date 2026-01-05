@@ -1,52 +1,56 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Carousel (carousel15) block parsing
-  // Header row as per guidelines
+  // Carousel (carousel15) block header
   const headerRow = ['Carousel (carousel15)'];
 
-  // Find the carousel slide items
+  // Find carousel items (slides)
+  const slides = [];
+  // The carousel content container
   const content = element.querySelector('.cmp-carousel__content');
-  if (!content) return;
-  const slides = Array.from(content.querySelectorAll('.cmp-carousel__item'));
-  if (!slides.length) return;
-
-  // Get all text nodes from the entire carousel block (element)
-  // This ensures we include all text content from the HTML, not just from the slide
-  const textNodes = [];
-  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) => {
-      if (!node.textContent.trim()) return NodeFilter.FILTER_SKIP;
-      if (node.parentNode && (node.parentNode.tagName === 'SCRIPT' || node.parentNode.tagName === 'STYLE')) {
-        return NodeFilter.FILTER_SKIP;
+  if (content) {
+    // Each slide is a direct child with class 'cmp-carousel__item'
+    const items = content.querySelectorAll('.cmp-carousel__item');
+    items.forEach((item) => {
+      // First cell: Find image (prefer <img> inside the slide)
+      let img = item.querySelector('img');
+      if (!img) {
+        const picture = item.querySelector('picture');
+        if (picture) img = picture;
       }
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  let node;
-  while ((node = walker.nextNode())) {
-    textNodes.push(node.textContent.trim());
+      // Second cell: Extract all visible text content from the slide
+      let textContent = '';
+      // Remove nav/indicators/scripts/styles/images from clone
+      const excludeSelectors = [
+        '.cmp-carousel__actions',
+        '.cmp-carousel__indicators',
+        'script',
+        'style',
+        'img',
+        'picture',
+      ];
+      const clone = item.cloneNode(true);
+      excludeSelectors.forEach(sel => {
+        clone.querySelectorAll(sel).forEach(e => e.remove());
+      });
+      // Recursively get all text nodes
+      function getTextRecursive(node) {
+        let txt = '';
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          txt += node.textContent.trim() + ' ';
+        }
+        node.childNodes && node.childNodes.forEach(child => {
+          txt += getTextRecursive(child);
+        });
+        return txt;
+      }
+      textContent = getTextRecursive(clone).replace(/\s+/g, ' ').trim();
+      // Always output two columns per row, second cell empty if no text
+      slides.push([img || '', textContent]);
+    });
   }
-  // Remove duplicate text and join
-  const allTextContent = Array.from(new Set(textNodes)).join(' ').trim();
 
-  const rows = slides.map((slide) => {
-    // IMAGE CELL
-    const img = slide.querySelector('img');
-    if (!img) return null;
-
-    // TEXT CELL: Use all text found in the carousel block
-    let textContent = allTextContent;
-    // If nothing found, fallback to image alt
-    if (!textContent && img.alt) {
-      textContent = img.alt;
-    }
-    // If still nothing, set to empty string
-    if (!textContent) textContent = '';
-
-    return [img, textContent];
-  }).filter(Boolean);
-
-  const cells = [headerRow, ...rows];
-  const block = WebImporter.DOMUtils.createTable(cells, document);
-  element.replaceWith(block);
+  // Compose table rows
+  const cells = [headerRow, ...slides];
+  const table = WebImporter.DOMUtils.createTable(cells, document);
+  element.replaceWith(table);
 }

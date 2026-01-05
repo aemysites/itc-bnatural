@@ -2,42 +2,48 @@
 export default function parse(element, { document }) {
   // Accordion block header
   const headerRow = ['Accordion (accordion16)'];
-  const rows = [headerRow];
 
   // Find all accordion items
   const items = Array.from(element.querySelectorAll('.cmp-accordion__item'));
 
+  const rows = [headerRow];
+
   items.forEach(item => {
-    // Title: Find the button with class 'cmp-accordion__button' and get its text (from span.cmp-accordion__title)
+    // Title cell: get the button title text (not the icon)
     const button = item.querySelector('.cmp-accordion__button');
-    let title = '';
-    if (button) {
-      const titleSpan = button.querySelector('.cmp-accordion__title');
-      title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
-    }
-    // Place title in a strong tag for semantic emphasis
-    const titleElem = document.createElement('strong');
-    titleElem.textContent = title;
+    let titleSpan = button && button.querySelector('.cmp-accordion__title');
+    // Defensive fallback if structure changes
+    let titleContent = titleSpan ? titleSpan.textContent.trim() : (button ? button.textContent.trim() : '');
+    const titleCell = document.createElement('div');
+    titleCell.textContent = titleContent;
+    titleCell.style.fontWeight = 'bold';
 
-    // Content: Find the panel with data-cmp-hook-accordion="panel"
+    // Content cell: find the panel and extract its content
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
-    let contentElem = document.createElement('div');
+    let contentCell;
     if (panel) {
-      // Find the first content container inside the panel
-      const contentContainer = panel.querySelector('.cmp-container');
-      if (contentContainer) {
-        // Use the container directly for resilience
-        contentElem = contentContainer;
+      // Defensive: find first .cmp-text or all direct children
+      const cmpText = panel.querySelector('.cmp-text');
+      if (cmpText) {
+        contentCell = cmpText;
       } else {
-        // Fallback: use panel itself
-        contentElem = panel;
+        // If no .cmp-text, use panel's children
+        const panelChildren = Array.from(panel.children);
+        if (panelChildren.length) {
+          contentCell = document.createElement('div');
+          panelChildren.forEach(child => contentCell.appendChild(child.cloneNode(true)));
+        } else {
+          contentCell = document.createElement('div');
+          contentCell.innerHTML = panel.innerHTML;
+        }
       }
+    } else {
+      // If no panel, leave cell blank
+      contentCell = document.createElement('div');
     }
-
-    rows.push([titleElem, contentElem]);
+    rows.push([titleCell, contentCell]);
   });
 
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(block);
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }
