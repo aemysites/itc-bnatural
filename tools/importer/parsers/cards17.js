@@ -1,57 +1,40 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards17) block parsing
-  // Header row as per block guidelines
+  // Cards (cards17) block header
   const headerRow = ['Cards (cards17)'];
   const rows = [headerRow];
 
-  // Find all card anchor elements (each card is wrapped in <a>)
-  const cardAnchors = element.querySelectorAll('a');
+  // Find all card links inside the cards container
+  const cardLinks = element.querySelectorAll('.cmp-card__container > a');
 
-  cardAnchors.forEach((cardAnchor) => {
-    // Find the card content container
-    const cardContent = cardAnchor.querySelector('.cmp-card__content');
-    if (!cardContent) return;
+  cardLinks.forEach((cardLink) => {
+    // Each card's content is inside the .cmp-card__content
+    const content = cardLink.querySelector('.cmp-card__content');
+    if (!content) return;
 
-    // --- IMAGE CELL ---
-    // Find the image inside the card
-    let imageEl = null;
-    const media = cardContent.querySelector('.cmp-card__media');
-    if (media) {
-      // Prefer <img> inside <picture>
-      const img = media.querySelector('img');
-      if (img) imageEl = img;
-      else {
-        // Fallback: use <picture> if no <img>
-        const picture = media.querySelector('picture');
-        if (picture) imageEl = picture;
-      }
+    // Title: inside .cmp-card__title > h3
+    const titleH3 = content.querySelector('.cmp-card__title h3');
+    let titleEl = '';
+    if (titleH3) {
+      // Use <strong> for title as per screenshot (bolded, heading-like)
+      titleEl = document.createElement('strong');
+      titleEl.textContent = titleH3.textContent.trim();
     }
 
-    // --- TEXT CELL ---
-    // Find the card title (h3)
-    let titleEl = null;
-    const titleDiv = cardContent.querySelector('.cmp-card__title');
-    if (titleDiv) {
-      const h3 = titleDiv.querySelector('h3');
-      if (h3) titleEl = h3;
-      else titleEl = titleDiv;
+    // Image: inside .cmp-card__media img
+    const img = content.querySelector('.cmp-card__media img');
+
+    // Ensure image is referenced, not cloned or recreated
+    let imgEl = '';
+    if (img) {
+      imgEl = img;
     }
 
-    // Compose the text cell
-    const textCellContent = [];
-    if (titleEl) textCellContent.push(titleEl);
-    // No description or CTA in this source, but if present, add here
-
-    // Add row: [image, text]
-    rows.push([
-      imageEl,
-      textCellContent
-    ]);
+    // Each card row: [image, title]
+    rows.push([imgEl, titleEl]);
   });
 
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  // Replace the original element
-  element.replaceWith(block);
+  // Create the table block
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

@@ -1,70 +1,46 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards20) block parsing
-  // 1. Header row
+  // Cards block header
   const headerRow = ['Cards (cards20)'];
 
-  // 2. Find all card anchor elements (each card is an <a> containing card content)
-  const cardAnchors = Array.from(element.querySelectorAll('a'));
-  const rows = [];
+  // Find all card anchor elements (each card is wrapped in an <a>)
+  const cardAnchors = Array.from(element.querySelectorAll('.cmp-card__container > a'));
 
-  cardAnchors.forEach((cardAnchor) => {
-    // Card image (first cell)
-    let imageEl = null;
-    const picture = cardAnchor.querySelector('.cmp-card__media picture');
-    if (picture) {
-      // Use the <img> element inside <picture>
-      imageEl = picture.querySelector('img');
+  // For each card, extract image and text content
+  const rows = cardAnchors.map(card => {
+    // Image: find the <img> inside .cmp-card__media
+    const img = card.querySelector('.cmp-card__media img');
+
+    // Text content: title, subtitle, description, CTA
+    const titleBlock = card.querySelector('.cmp-card__title');
+    const descriptionBlock = card.querySelector('.cmp-card__description');
+    const buttonText = card.querySelector('.cmp-button__text');
+    const cardLink = card.getAttribute('href');
+
+    // Build the text cell
+    const textCell = document.createElement('div');
+    // Title (h3 + p)
+    if (titleBlock) {
+      Array.from(titleBlock.children).forEach(child => textCell.appendChild(child.cloneNode(true)));
     }
-
-    // Card text content (second cell)
-    const textContent = document.createElement('div');
-    textContent.style.display = 'flex';
-    textContent.style.flexDirection = 'column';
-
-    // Title (h3) and metadata (p)
-    const titleDiv = cardAnchor.querySelector('.cmp-card__title');
-    if (titleDiv) {
-      const h3 = titleDiv.querySelector('h3');
-      if (h3) textContent.appendChild(h3);
-      const metaP = titleDiv.querySelector('p');
-      if (metaP) textContent.appendChild(metaP);
-    }
-
     // Description
-    const descDiv = cardAnchor.querySelector('.cmp-card__description');
-    if (descDiv) {
-      // Usually contains a <p class="body-2">
-      const descP = descDiv.querySelector('p');
-      if (descP) textContent.appendChild(descP);
+    if (descriptionBlock) {
+      Array.from(descriptionBlock.children).forEach(child => textCell.appendChild(child.cloneNode(true)));
     }
-
     // CTA (Read More)
-    const buttonDiv = cardAnchor.querySelector('.button');
-    if (buttonDiv) {
-      const btnText = buttonDiv.querySelector('.cmp-button__text');
-      if (btnText) {
-        // Wrap CTA text in a link to the cardAnchor's href
-        const ctaLink = document.createElement('a');
-        ctaLink.href = cardAnchor.href;
-        ctaLink.target = '_blank';
-        ctaLink.textContent = btnText.textContent;
-        textContent.appendChild(ctaLink);
-      }
+    if (buttonText && cardLink) {
+      const cta = document.createElement('a');
+      cta.href = cardLink;
+      cta.textContent = buttonText.textContent;
+      cta.setAttribute('target', '_blank');
+      textCell.appendChild(cta);
     }
 
-    rows.push([
-      imageEl || '',
-      textContent
-    ]);
+    return [img, textCell];
   });
 
-  // Build table
-  const table = WebImporter.DOMUtils.createTable([
-    headerRow,
-    ...rows
-  ], document);
-
-  // Replace original element
-  element.replaceWith(table);
+  // Compose the table
+  const cells = [headerRow, ...rows];
+  const block = WebImporter.DOMUtils.createTable(cells, document);
+  element.replaceWith(block);
 }

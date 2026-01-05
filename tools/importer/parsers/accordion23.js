@@ -1,69 +1,57 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header (single cell, must span two columns)
-  const headerRow = ['Accordion (accordion23)'];
-
-  // Find the accordion container
+  // Find the accordion root
   const accordion = element.querySelector('.cmp-accordion');
   if (!accordion) return;
 
-  // Get all accordion items
+  // Find all accordion items
   const items = accordion.querySelectorAll('.cmp-accordion__item');
   if (!items.length) return;
 
-  // Prepare rows for the block table
-  const rows = [];
+  // Prepare table rows: header row must be single cell, but table must have two columns in all rows
+  const rows = [
+    ['Accordion (accordion23)'], // single cell header row
+  ];
 
-  // Add header row as a single cell spanning two columns
-  const header = document.createElement('tr');
-  const th = document.createElement('th');
-  th.textContent = headerRow[0];
-  th.colSpan = 2;
-  header.appendChild(th);
-  rows.push(header);
-
-  items.forEach((item) => {
-    // Title: get the button text inside the header
-    const button = item.querySelector('.cmp-accordion__button');
+  items.forEach(item => {
+    // Title extraction
     let title = '';
+    const button = item.querySelector('.cmp-accordion__button');
     if (button) {
       const titleSpan = button.querySelector('.cmp-accordion__title');
       title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
     }
 
-    // Content: get the panel content
+    // Content extraction
+    let content = '';
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
-    let contentCell = document.createElement('td');
     if (panel) {
-      // Flatten the content: extract only the actual content inside the panel
-      // Find the innermost .cmp-text or use panel's children
-      const textBlock = panel.querySelector('.cmp-text');
-      if (textBlock) {
-        Array.from(textBlock.childNodes).forEach((node) => {
-          contentCell.appendChild(node.cloneNode(true));
-        });
-      } else {
-        Array.from(panel.childNodes).forEach((node) => {
-          contentCell.appendChild(node.cloneNode(true));
-        });
+      let contentElem = panel.querySelector('.cmp-text');
+      if (!contentElem) {
+        contentElem = Array.from(panel.children).find(
+          el => el.textContent && el.textContent.trim().length > 0
+        );
+      }
+      if (contentElem) {
+        content = contentElem;
+      } else if (panel.textContent && panel.textContent.trim().length > 0) {
+        content = panel;
       }
     }
 
-    // Title cell
-    const titleCell = document.createElement('td');
-    titleCell.textContent = title;
-
-    // Row
-    const row = document.createElement('tr');
-    row.appendChild(titleCell);
-    row.appendChild(contentCell);
-    rows.push(row);
+    // Add row to table
+    rows.push([
+      title,
+      content
+    ]);
   });
 
-  // Build table manually to ensure correct structure
-  const table = document.createElement('table');
-  rows.forEach((row) => table.appendChild(row));
-
-  // Replace the original element
+  // Create table and ensure header row is a single cell, but table has two columns in all rows
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Fix header row to span two columns for visual consistency
+  const headerRow = table.querySelector('tr:first-child th, tr:first-child td');
+  if (headerRow) {
+    headerRow.setAttribute('colspan', '2');
+  }
   element.replaceWith(table);
 }

@@ -3,32 +3,47 @@ export default function parse(element, { document }) {
   // Header row for Embed (embedVideo28)
   const headerRow = ['Embed (embedVideo28)'];
 
-  // Find the iframe (YouTube embed)
+  // Find the iframe for the embedded video
   const iframe = element.querySelector('iframe');
   let videoUrl = '';
-  let videoTitle = '';
-  if (iframe) {
-    // Extract canonical video URL
+  if (iframe && iframe.src) {
+    // Try to extract the canonical video URL from the embed src
+    // For YouTube, convert embed URL to watch URL
     const src = iframe.src;
-    const youtubeMatch = src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-    if (youtubeMatch) {
-      videoUrl = `https://www.youtube.com/watch?v=${youtubeMatch[1]}`;
-    } else if (src) {
+    let match;
+    if (src.includes('youtube.com/embed/')) {
+      match = src.match(/youtube.com\/embed\/([^?&]+)/);
+      if (match && match[1]) {
+        videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
+      } else {
+        videoUrl = src;
+      }
+    } else if (src.includes('vimeo.com')) {
+      match = src.match(/vimeo.com\/(?:video\/)?([0-9]+)/);
+      if (match && match[1]) {
+        videoUrl = `https://vimeo.com/${match[1]}`;
+      } else {
+        videoUrl = src;
+      }
+    } else {
       videoUrl = src;
-    }
-    // Extract video title from iframe attribute
-    if (iframe.title) {
-      videoTitle = iframe.title;
     }
   }
 
-  // Compose cell content: video title, subtitle (from screenshot analysis), and link
-  const cellContent = [];
-  if (videoTitle) {
-    cellContent.push(videoTitle);
+  // Extract all visible text content from the element (excluding iframe)
+  // Also include iframe title if present
+  let textContent = '';
+  if (iframe && iframe.title) {
+    textContent += iframe.title;
   }
-  // Add subtitle/caption visible in screenshot analysis
-  cellContent.push('I am from Samastipur District, Bihar.');
+
+  // Compose cell content: include all visible text and the video link
+  const cellContent = [];
+  if (textContent) {
+    const textElem = document.createElement('div');
+    textElem.textContent = textContent;
+    cellContent.push(textElem);
+  }
   if (videoUrl) {
     const videoLink = document.createElement('a');
     videoLink.href = videoUrl;
@@ -36,15 +51,15 @@ export default function parse(element, { document }) {
     cellContent.push(videoLink);
   }
 
-  // Table rows
-  const rows = [
+  // Content row includes all HTML text and the video link
+  const contentRow = [cellContent];
+
+  // Build the table
+  const table = WebImporter.DOMUtils.createTable([
     headerRow,
-    [cellContent]
-  ];
+    contentRow,
+  ], document);
 
-  // Create block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-
-  // Replace original element with block
-  element.replaceWith(block);
+  // Replace the original element with the table
+  element.replaceWith(table);
 }

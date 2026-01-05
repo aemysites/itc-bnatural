@@ -1,73 +1,58 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Block header row
+  // Cards (cards37) block: 2 columns, multiple rows, each row is a card
+  // Header row
   const headerRow = ['Cards (cards37)'];
+
+  // Find all card links (each <a.cmp-product-list__link> is a card)
+  const cardLinks = element.querySelectorAll('a.cmp-product-list__link');
   const rows = [headerRow];
 
-  // Find all card links (each card is an <a.cmp-product-list__link>)
-  const cardLinks = element.querySelectorAll('a.cmp-product-list__link');
-
   cardLinks.forEach((cardLink) => {
-    // --- IMAGE CELL ---
-    // The main card image is the first <picture> in the card
+    // Image: Use the first <picture> (default image)
     const contentDiv = cardLink.querySelector('.cmp-product-list__content');
-    let imageCell = null;
+    let imgEl = null;
     if (contentDiv) {
       const firstPicture = contentDiv.querySelector('picture');
       if (firstPicture) {
-        // Use the <img> inside the first <picture>
-        const img = firstPicture.querySelector('img');
-        if (img) imageCell = img;
-        else imageCell = firstPicture;
+        // Use the first <img> inside first <picture>
+        imgEl = firstPicture.querySelector('img');
       }
-    }
-    // Defensive fallback: if no image found, leave cell empty
-    if (!imageCell) imageCell = document.createElement('span');
-
-    // --- TEXT CELL ---
-    // Compose: Title, Description, Available sizes
-    const detailsDiv = contentDiv ? contentDiv.querySelector('.cmp-product-list__details') : null;
-    const textCellContent = [];
-    if (detailsDiv) {
-      // Title: use the cardLink's data-title attribute (or fallback to img alt/title)
-      let titleText = cardLink.getAttribute('data-title');
-      if (!titleText) {
-        // Fallback: try image alt/title
-        const img = imageCell;
-        titleText = img && img.getAttribute ? (img.getAttribute('title') || img.getAttribute('alt')) : '';
-      }
-      if (titleText) {
-        const titleEl = document.createElement('h2');
-        titleEl.textContent = titleText;
-        textCellContent.push(titleEl);
-      }
-      // Description
-      const descP = detailsDiv.querySelector('.cmp-product-list__details-description');
-      if (descP) textCellContent.push(descP);
-      // Available sizes
-      const availDiv = detailsDiv.querySelector('.cmp-product-list__available-details');
-      if (availDiv) {
-        // Compose 'Available in' label and sizes
-        const availLabel = availDiv.querySelector('p');
-        const availSizes = availDiv.querySelector('h2');
-        if (availLabel || availSizes) {
-          const availWrap = document.createElement('div');
-          if (availLabel) availWrap.appendChild(availLabel);
-          if (availSizes) availWrap.appendChild(availSizes);
-          textCellContent.push(availWrap);
-        }
-      }
-    }
-    // Defensive fallback: if no text, leave cell empty
-    if (textCellContent.length === 0) {
-      textCellContent.push(document.createElement('span'));
     }
 
-    // Add row: [image, text]
-    rows.push([imageCell, textCellContent]);
+    // Text cell: Title (from data-title or details), description, available sizes
+    const detailsDiv = cardLink.querySelector('.cmp-product-list__details');
+    let titleText = cardLink.getAttribute('data-title') || '';
+    let titleEl = null;
+    if (titleText) {
+      titleEl = document.createElement('h3');
+      titleEl.textContent = titleText;
+    }
+
+    // Description
+    let descEl = detailsDiv ? detailsDiv.querySelector('.cmp-product-list__details-description') : null;
+
+    // Available sizes
+    let availDiv = detailsDiv ? detailsDiv.querySelector('.cmp-product-list__available-details') : null;
+    let availEls = [];
+    if (availDiv) {
+      // Use all children of available-details
+      availEls = Array.from(availDiv.children);
+    }
+
+    // Compose text cell: title, description, available sizes
+    const textCell = [];
+    if (titleEl) textCell.push(titleEl);
+    if (descEl) textCell.push(descEl);
+    if (availEls.length) textCell.push(...availEls);
+
+    rows.push([
+      imgEl || '',
+      textCell
+    ]);
   });
 
-  // Create table and replace element
-  const table = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(table);
+  // Create block table
+  const block = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(block);
 }

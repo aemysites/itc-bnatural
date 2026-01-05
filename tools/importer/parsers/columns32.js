@@ -4,41 +4,42 @@ export default function parse(element, { document }) {
   const teaser = element.querySelector('.cmp-teaser');
   if (!teaser) return;
 
-  // LEFT COLUMN: Text content and CTA
-  const content = teaser.querySelector('.cmp-teaser__content');
+  // Left column: text and button
   const leftCol = document.createElement('div');
-  if (content) {
-    // Title (red, h3)
-    const title = content.querySelector('.cmp-teaser__title');
-    if (title) leftCol.appendChild(title);
-    // Description (h1)
-    const desc = content.querySelector('.cmp-teaser__description');
-    if (desc) {
-      // Some descriptions wrap an h1, preserve hierarchy
-      Array.from(desc.childNodes).forEach(node => leftCol.appendChild(node.cloneNode(true)));
-    }
-    // CTA button
-    const cta = content.querySelector('.cmp-teaser__action-link');
-    if (cta) leftCol.appendChild(cta);
+  const teaserContent = teaser.querySelector('.cmp-teaser__content');
+  if (teaserContent) {
+    // Move all content children (h3, h1)
+    Array.from(teaserContent.children).forEach(child => {
+      leftCol.appendChild(child.cloneNode(true));
+    });
+  }
+  // Add the button (if any), but only once and not duplicating
+  const actionContainer = teaser.querySelector('.cmp-teaser__action-container');
+  if (actionContainer) {
+    const btn = actionContainer.querySelector('a');
+    if (btn && !leftCol.querySelector('a')) leftCol.appendChild(btn.cloneNode(true));
   }
 
-  // RIGHT COLUMN: Main image and animation image
+  // Right column: main image(s)
   const rightCol = document.createElement('div');
-  // Main image (farm scene)
-  const mainImg = teaser.querySelector('.cmp-teaser__image img');
-  if (mainImg) rightCol.appendChild(mainImg);
-  // Animation image (guava)
-  const animImg = teaser.querySelector('.cmp-animation img');
-  if (animImg) rightCol.appendChild(animImg);
+  // Main farm image
+  const farmImagePicture = teaser.querySelector('.cmp-teaser__image picture');
+  if (farmImagePicture) {
+    rightCol.appendChild(farmImagePicture.cloneNode(true));
+  }
+  // Decorative guava image
+  const guavaPicture = teaser.querySelector('.cmp-animation picture');
+  if (guavaPicture) {
+    rightCol.appendChild(guavaPicture.cloneNode(true));
+  }
 
   // Compose table
   const headerRow = ['Columns (columns32)'];
-  const columnsRow = [leftCol, rightCol];
+  const contentRow = [leftCol, rightCol];
   const table = WebImporter.DOMUtils.createTable([
     headerRow,
-    columnsRow
+    contentRow
   ], document);
 
-  // Replace original element
   element.replaceWith(table);
 }

@@ -1,48 +1,50 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header
+  // Accordion block header (must be a single cell)
   const headerRow = ['Accordion (accordion36)'];
-  const rows = [headerRow];
 
-  // Find all accordion items (each item is a section)
+  // Find all accordion items
   const items = element.querySelectorAll('.cmp-accordion__item');
+
+  // Each row: [title, content]
+  const rows = [headerRow];
 
   items.forEach((item) => {
     // Title: find the button and its title span
-    const button = item.querySelector('.cmp-accordion__button');
+    const button = item.querySelector('button.cmp-accordion__button');
     let title = '';
     if (button) {
       const titleSpan = button.querySelector('.cmp-accordion__title');
-      if (titleSpan) {
-        title = titleSpan.textContent.trim();
-      } else {
-        title = button.textContent.trim();
-      }
+      title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
     }
-    // Content: find the panel and its visible content
+
+    // Content: find the panel
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
     let content = null;
     if (panel) {
-      // Defensive: grab all direct children of the panel
-      // Usually there's a container > cmp-container > text > cmp-text
-      // We'll grab the first .cmp-text inside the panel
-      const cmpText = panel.querySelector('.cmp-text');
-      if (cmpText) {
-        // Use the cmp-text element directly for resilience
-        content = cmpText;
-      } else {
-        // If no cmp-text, fallback to all children
-        const children = Array.from(panel.children);
-        content = children.length ? children : document.createTextNode('');
-      }
-    } else {
-      content = document.createTextNode('');
+      // Defensive: get the first content container inside the panel
+      const contentContainer = panel.querySelector('.cmp-container, .container');
+      content = contentContainer || panel;
     }
-    // Add row: [title, content]
-    rows.push([title, content]);
+
+    // Only push rows that have both title and content
+    if (title && content) {
+      rows.push([title, content]);
+    }
   });
 
-  // Create and replace block table
-  const table = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(table);
+  // Create the block table
+  const block = WebImporter.DOMUtils.createTable(rows, document);
+
+  // Fix header row to have only one cell (remove extra columns)
+  if (block.querySelector('tr')) {
+    const headerTr = block.querySelector('tr');
+    // Remove all but the first cell in header row
+    while (headerTr.cells.length > 1) {
+      headerTr.deleteCell(1);
+    }
+  }
+
+  // Replace the original element
+  element.replaceWith(block);
 }
