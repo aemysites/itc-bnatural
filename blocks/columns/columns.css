@@ -324,7 +324,6 @@
   margin: 0;
 }
 
-/* Main wrapper: horizontal side-by-side layout, centered vertically */
 .columns.columns11 .columns-wrapper {
   display: flex;
   flex-direction: row;
@@ -335,7 +334,6 @@
   width: 100%;
 }
 
-/* Image column: circle, vertically centered, with left indent */
 .columns.columns11 .columns-img-col {
   display: flex;
   align-items: center;
@@ -401,4 +399,145 @@
     margin-right: 0;
     margin-bottom: 16px;
   }
+}
+
+
+.columns.columns12 {
+  /* Paper-cream to green gradient background, jagged edge using SVG mask */
+  background: linear-gradient(to bottom, #f8f8e7 48px, #65a23c 48px 100%);
+  position: relative;
+  padding: 0;
+  margin: 0;
+  min-height: 140px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.columns.columns12::before {
+  /* Jagged SVG mask at top of green section (base64 inline SVG) */
+  content: '';
+  display: block;
+  position: absolute;
+  top: 48px;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  pointer-events: none;
+  background: url("data:image/svg+xml;utf8,<svg width='1920' height='32' xmlns='http://www.w3.org/2000/svg'><path d='M0,32 Q80,0 160,32 T320,32 T480,32 T640,32 T800,32 T960,32 T1120,32 T1280,32 T1440,32 T1600,32 T1760,32 T1920,32 V32 H0 Z' fill='%2365a23c'/></svg>") repeat-x top left;
+  z-index: 1;
+}
+
+/* Layout main block using CSS Grid for 4 columns: logo + 3 nav columns */
+.columns.columns12 div {
+  display: grid;
+  grid-template-columns: minmax(160px, 270px) 1fr 1fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 40px 48px 36px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (width <= 900px) {
+  .columns.columns12 div {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 24px 12px;
+  }
+}
+
+/* Leftmost column (logo/text block) */
+.columns.columns12 div div:first-child {
+  color: #fff;
+  text-align: left;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 160px;
+}
+
+.columns.columns12 div div:first-child img {
+  max-width: 140px;
+  height: auto;
+  margin-bottom: 14px;
+}
+
+/* Navigation columns: text and links */
+.columns.columns12 div div {
+  color: #fff;
+}
+
+/* Remove bullets on all ULs inside columns block */
+.columns.columns12 ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Nav columns: vertical spacing between links */
+.columns.columns12 div div ul li {
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+/* All links are white, no underline */
+.columns.columns12 a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.columns.columns12 a:hover,
+.columns.columns12 a:focus {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Vertical dividers between nav columns (use :not selectors for 2nd and 3rd columns) */
+.columns.columns12 div div:not(:first-child, :last-child)::before {
+  content: "";
+  display: block;
+  position: absolute;
+  right: -16px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgb(255 255 255 / 50%);
+}
+
+.columns.columns12 div div:not(:first-child) {
+  padding-left: 32px;
+}
+
+.columns.columns12 div div:last-child {
+  text-align: right;
+}
+
+/* Responsive: stack columns vertically, remove dividers */
+@media (width <= 900px) {
+  .columns.columns12 div div {
+    border-right: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .columns.columns12 div div ul li {
+    margin-bottom: 8px;
+  }
+}
+
+.columns.columns12 img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.columns-container .columns-wrapper {
+  max-width: unset;
+  padding: 0;
+  margin: 0;
 }
