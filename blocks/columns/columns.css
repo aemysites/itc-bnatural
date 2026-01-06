@@ -42,7 +42,6 @@
   box-sizing: border-box;
 }
 
-/* Inner Block Styles */
 .columns.columns3 .block {
   background: #D6F5D3;
   border-radius: 22px;
@@ -50,7 +49,6 @@
   box-sizing: border-box;
 }
 
-/* Main Columns Layout: Two side-by-side columns */
 .columns.columns3 .block .columns-2-cols {
   display: flex;
   flex-direction: row;
@@ -59,7 +57,6 @@
   width: 100%;
 }
 
-/* Responsive: Stack columns vertically on small screens */
 @media (width <= 900px) {
   .columns.columns3 .block {
     padding: 28px 6vw;
@@ -71,7 +68,6 @@
   }
 }
 
-/* Left Column: Vertical stacking and centering */
 .columns.columns3 .block .columns-2-cols div {
   display: flex;
   flex-direction: column;
@@ -81,7 +77,6 @@
   min-width: 0;
 }
 
-/* Logo Image: Large and tightly grouped */
 .columns.columns3 .block .columns-2-cols div picture img {
   width: 148px;
   min-width: 0;
@@ -93,7 +88,6 @@
   align-self: flex-start;
 }
 
-/* Heading: Bold, dark, left-aligned */
 .columns.columns3 .block .columns-2-cols div h3 {
   color: #222;
   font-weight: 700;
@@ -103,7 +97,6 @@
   text-align: left;
 }
 
-/* Description: Well-spaced, left-aligned */
 .columns.columns3 .block .columns-2-cols div h3 + p {
   color: #444;
   font-size: var(--body-font-size-s);
@@ -112,7 +105,6 @@
   text-align: left;
 }
 
-/* Button: Blue, pill-shaped, flush left */
 .columns.columns3 .block .columns-2-cols div .button,
 .columns.columns3 .block .columns-2-cols div a.button {
   background: var(--link-color);
@@ -136,7 +128,6 @@
   color: #fff;
 }
 
-/* Right Column: Card Row */
 .columns.columns3 .block .columns-2-cols .columns-img-col {
   display: flex;
   flex-direction: row;
@@ -147,7 +138,6 @@
   min-width: 0;
 }
 
-/* Product Cards */
 .columns.columns3 .block .columns-2-cols .columns-img-col picture {
   background: #F6FFE8;
   border-radius: 20px;
@@ -162,7 +152,6 @@
   max-width: 152px;
 }
 
-/* Card Images */
 .columns.columns3 .block .columns-2-cols .columns-img-col picture img {
   width: 128px;
   height: auto;
@@ -170,21 +159,18 @@
   object-fit: contain;
 }
 
-/* Center Card: Subtle scale and shadow */
 .columns.columns3 .block .columns-2-cols .columns-img-col picture:nth-child(2) {
   z-index: 2;
   box-shadow: 0 4px 16px rgb(33 141 76 / 11%);
   transform: scale(1.025);
 }
 
-/* Side Cards: Slightly less scale, full opacity */
 .columns.columns3 .block .columns-2-cols .columns-img-col picture:not(:nth-child(2)) {
   z-index: 1;
   opacity: 1;
   transform: scale(0.985);
 }
 
-/* Responsive adjustments for cards/images */
 @media (width <= 900px) {
   .columns.columns3 .block .columns-2-cols .columns-img-col {
     gap: 15px;
@@ -197,5 +183,150 @@
 
   .columns.columns3 .block .columns-2-cols .columns-img-col picture img {
     width: 56px;
+  }
+}
+
+
+.columns.columns6 {
+  background: #FCFFF0;
+  border-radius: 20px;
+  padding: 32px 36px 28px;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+/* Responsive padding for columns block */
+@media (width <= 800px) {
+  .columns.columns6 {
+    padding: 20px 12px 18px;
+    border-radius: 12px;
+  }
+}
+
+/* Layout for column content: two columns side by side */
+.columns.columns6 .block.columns-2-cols {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 34px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive stacking for narrow screens */
+@media (width <= 650px) {
+  .columns.columns6 .block.columns-2-cols {
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+/* Column proportions: left narrow, right wide */
+.columns.columns6 .block.columns-2-cols div {
+  flex: 0 1 220px;
+  min-width: 0;
+
+  /* stack content vertically inside each column */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Right column wider */
+.columns.columns6 .block.columns-2-cols div:last-child {
+  flex: 1 1 340px;
+  min-width: 180px;
+  max-width: 440px;
+  gap: 6px;
+}
+
+/* Left column inner spacing */
+.columns.columns6 .block.columns-2-cols div:first-child {
+  gap: 8px;
+  margin-top: 0;
+}
+
+/* Typography for left column */
+.columns.columns6 .block.columns-2-cols div:first-child h3 {
+  color: #FF4B4B;
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin: 0 0 6px;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.columns.columns6 .block.columns-2-cols div:first-child h2 {
+  color: #222;
+  font-weight: 700;
+  font-size: 2rem;
+  margin: 0 0 7px;
+  line-height: 1.15;
+}
+
+.columns.columns6 .block.columns-2-cols div:first-child p {
+  color: #222;
+  opacity: 0.7;
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Typography and spacing for right column */
+.columns.columns6 .block.columns-2-cols div:last-child h4 {
+  color: #222;
+  font-weight: 700;
+  font-size: 0.97rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+/* Fruit option styles for right column */
+.columns.columns6 .block.columns-2-cols div:last-child p {
+  background: #FFF;
+  border: 1px solid #E4E7EC;
+  border-radius: 7px;
+  padding: 10px 18px;
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #222;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.13s, border-color 0.13s;
+  min-width: 140px;
+  max-width: 98%;
+  outline: none;
+  line-height: 1.35;
+}
+
+.columns.columns6 .block.columns-2-cols div:last-child p:hover {
+  background: #F4F5F7;
+  border-color: #C7CED6;
+}
+
+/* Ensure consistent stacking of right column */
+
+/* If a select element is present, style it as a dropdown */
+.columns.columns6 .block.columns-2-cols div:last-child select {
+  background: #FFF;
+  border: 1px solid #E4E7EC;
+  border-radius: 7px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  color: #222;
+  margin-bottom: 8px;
+  width: 100%;
+  max-width: 220px;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+}
+
+/* For very large screens, further constrain right column width */
+@media (width >= 1200px) {
+  .columns.columns6 .block.columns-2-cols div:last-child {
+    max-width: 460px;
   }
 }
