@@ -1,45 +1,37 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Find the main teaser block
-  const teaser = element.querySelector('.cmp-teaser');
-  if (!teaser) return;
-
-  // Left column: text and button
-  const leftCol = document.createElement('div');
-  const teaserContent = teaser.querySelector('.cmp-teaser__content');
-  if (teaserContent) {
-    // Move all content children (h3, h1)
-    Array.from(teaserContent.children).forEach(child => {
-      leftCol.appendChild(child.cloneNode(true));
-    });
-  }
-  // Add the button (if any), but only once and not duplicating
-  const actionContainer = teaser.querySelector('.cmp-teaser__action-container');
-  if (actionContainer) {
-    const btn = actionContainer.querySelector('a');
-    if (btn && !leftCol.querySelector('a')) leftCol.appendChild(btn.cloneNode(true));
-  }
-
-  // Right column: main image(s)
-  const rightCol = document.createElement('div');
-  // Main farm image
-  const farmImagePicture = teaser.querySelector('.cmp-teaser__image picture');
-  if (farmImagePicture) {
-    rightCol.appendChild(farmImagePicture.cloneNode(true));
-  }
-  // Decorative guava image
-  const guavaPicture = teaser.querySelector('.cmp-animation picture');
-  if (guavaPicture) {
-    rightCol.appendChild(guavaPicture.cloneNode(true));
-  }
-
-  // Compose table
+  // Header row for Columns block
   const headerRow = ['Columns (columns32)'];
-  const contentRow = [leftCol, rightCol];
-  const table = WebImporter.DOMUtils.createTable([
-    headerRow,
-    contentRow
-  ], document);
 
+  // Left column: text (title, headline, button)
+  const teaserContent = element.querySelector('.cmp-teaser__content');
+  const leftColumn = [];
+  if (teaserContent) {
+    // Title (h3)
+    const title = teaserContent.querySelector('.cmp-teaser__title');
+    if (title) leftColumn.push(title);
+    // Headline (h1 inside description)
+    const description = teaserContent.querySelector('.cmp-teaser__description');
+    if (description) leftColumn.push(description);
+    // CTA button
+    const action = teaserContent.querySelector('.cmp-teaser__action-link');
+    if (action) leftColumn.push(action);
+  }
+
+  // Right column: guava image (decorative) + farm illustration
+  const rightColumn = [];
+  const animationImg = element.querySelector('.cmp-animation img');
+  if (animationImg) rightColumn.push(animationImg);
+  const farmImg = element.querySelector('.cmp-teaser__image img');
+  if (farmImg) rightColumn.push(farmImg);
+
+  // Build the table rows
+  const rows = [
+    headerRow,
+    [leftColumn, rightColumn]
+  ];
+
+  // Create the columns block table
+  const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

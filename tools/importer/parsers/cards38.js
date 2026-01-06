@@ -1,102 +1,72 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Extract navigation bar text (tab labels)
-  const tabLabels = Array.from(element.querySelectorAll('.cmp-tabs__tablist li')).map(li => li.textContent.trim()).filter(Boolean);
-  const navText = tabLabels.length ? tabLabels.join(' | ') : '';
+  // Always use the block name as the header row
+  const headerRow = ['Cards (cards38)'];
 
-  // Only use the active tabpanel (the visible tab)
+  // Find the active tab panel (the one visible)
   const activeTabPanel = element.querySelector('.cmp-tabs__tabpanel--active');
   if (!activeTabPanel) return;
 
-  // Find the main cards container
-  const cardsSection = activeTabPanel.querySelector('.cards');
-  if (!cardsSection) return;
-
-  // Find the card container holding all cards
-  const cardContainer = cardsSection.querySelector('.cmp-card__container');
-  if (!cardContainer) return;
+  // Find the cards container inside the active tab panel
+  const cardsContainer = activeTabPanel.querySelector('.cmp-card__container');
+  if (!cardsContainer) return;
 
   // Each card is an <a> with a .cmp-card__content inside
-  const cardLinks = Array.from(cardContainer.querySelectorAll('a'));
+  const cardLinks = Array.from(cardsContainer.querySelectorAll(':scope > a'));
   const cardRows = cardLinks.map((a) => {
-    // Find the first image inside the card
-    const img = a.querySelector('img');
-    // Compose text cell: fallback to href for product name
-    let productName = '';
-    const href = a.getAttribute('href') || '';
-    if (/guava/i.test(href)) {
-      productName = 'Guava';
-    } else if (/mango/i.test(href)) {
-      productName = 'Mango';
-    } else if (/mixed-fruit/i.test(href) || /mixed-fruits/i.test(href)) {
-      productName = 'Mixed Fruit';
-    } else if (/apple/i.test(href)) {
-      productName = 'Apple';
-    } else if (/orange/i.test(href)) {
-      productName = 'Orange';
-    } else if (/litchi/i.test(href)) {
-      productName = 'Litchi';
-    }
-    // Compose text cell: title (bold) + volume
-    const textCell = document.createElement('div');
-    if (productName) {
-      const title = document.createElement('strong');
-      title.textContent = productName;
-      textCell.appendChild(title);
-      textCell.appendChild(document.createElement('br'));
-    }
-    // Always add volume text as per screenshot
-    const volume = document.createElement('span');
-    volume.textContent = 'volume - 125 ml';
-    textCell.appendChild(volume);
-    return [img, textCell];
-  });
+    // Get all images and pictures for the image cell
+    const imageCell = document.createElement('div');
+    Array.from(a.querySelectorAll('picture')).forEach(pic => {
+      imageCell.appendChild(pic.cloneNode(true));
+    });
 
-  // The text content (description) is below the cards
-  const descSection = cardsSection.querySelector('.cards__description');
-  let description = '';
-  if (descSection) {
-    // Remove trailing empty paragraphs
-    const paragraphs = Array.from(descSection.querySelectorAll('p'));
-    for (let i = paragraphs.length - 1; i >= 0; i -= 1) {
-      if (paragraphs[i].innerHTML.trim() === '' || paragraphs[i].innerHTML === '&nbsp;') {
-        paragraphs[i].remove();
-      } else {
-        break;
+    // Compose the text cell: extract all text content from the card
+    const textCell = document.createElement('div');
+    // Try to extract fruit name from the image src or href
+    let fruitName = '';
+    const img = a.querySelector('img');
+    if (img && img.src) {
+      const match = img.src.match(/(guava|mango|mixed[-_ ]?fruit)/i);
+      if (match) {
+        fruitName = match[1].replace(/[-_]/g, ' ');
+        fruitName = fruitName.replace(/(^| )\w/g, s => s.toUpperCase());
       }
     }
-    // Get only the text content
-    description = descSection.textContent.trim();
-  }
-
-  // The CTA button (Explore All) is below the description
-  const ctaSection = cardsSection.querySelector('.exploremore');
-  let cta = null;
-  if (ctaSection) {
-    const a = ctaSection.querySelector('a');
-    if (a) cta = a;
-  }
-
-  // Compose the table rows
-  const headerRow = ['Cards (cards38)'];
-  const rows = [headerRow];
-  // Add navigation bar text as a row if present
-  if (navText) {
-    rows.push(['', navText]);
-  }
-  // For each card, add a row with image and text cell
-  cardRows.forEach(row => {
-    rows.push(row);
+    if (fruitName) {
+      const heading = document.createElement('h3');
+      heading.textContent = fruitName;
+      textCell.appendChild(heading);
+    }
+    // Add volume info ('125 ml' is visually present in screenshot)
+    const volume = document.createElement('p');
+    volume.textContent = '125 ml';
+    textCell.appendChild(volume);
+    // Add link to product page
+    if (a.href) {
+      const link = document.createElement('a');
+      link.href = a.href;
+      link.textContent = 'Explore All';
+      textCell.appendChild(link);
+    }
+    return [imageCell, textCell];
   });
-  // Add a row for description + CTA (only once, after all cards)
-  const textCell = [];
-  if (description) textCell.push(description);
-  if (cta) textCell.push(cta);
-  if (textCell.length) {
-    rows.push(['', textCell]);
+
+  // Description and CTA (below the cards)
+  const desc = activeTabPanel.querySelector('.cards__description .cmp-text');
+  const button = activeTabPanel.querySelector('.exploremore a');
+  if (desc || button) {
+    const descCell = document.createElement('div');
+    if (desc) desc.childNodes.forEach((node) => descCell.appendChild(node.cloneNode(true)));
+    if (button) descCell.appendChild(button.cloneNode(true));
+    cardRows.push(['', descCell]);
   }
 
-  // Create the table
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Build the table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...cardRows
+  ], document);
+
+  // Replace the original element
   element.replaceWith(table);
 }

@@ -2,72 +2,57 @@
 export default function parse(element, { document }) {
   // Cards block header row
   const headerRow = ['Cards (cards21)'];
+  const rows = [headerRow];
 
-  // Find the card container
-  const cardsContainer = element.querySelector('.cmp-product-list__container');
-  if (!cardsContainer) return;
+  // Only extract product cards (not the header section)
+  const cardContainer = element.querySelector('.cmp-product-list__container');
+  if (!cardContainer) return;
+  const cardLinks = cardContainer.querySelectorAll('.cmp-product-list__link');
 
-  // Get all card links (each card is an <a> with class 'cmp-product-list__link')
-  const cardLinks = Array.from(cardsContainer.querySelectorAll('.cmp-product-list__link'));
+  cardLinks.forEach((cardLink) => {
+    // Get the main (default) image for the card
+    const img = cardLink.querySelector('img.cmp-image__default');
 
-  // For each card, extract image and all text content
-  const cardRows = cardLinks.map(link => {
-    // Get the first <img> inside the card (the main product image)
-    const img = link.querySelector('picture img');
+    // Build the text content cell
+    const textCell = document.createElement('div');
 
-    // Compose the card text content
-    const textDiv = document.createElement('div');
-
-    // 1. Vertical product name (decorative text)
-    const verticalName = link.getAttribute('data-title');
-    if (verticalName) {
-      const vertEl = document.createElement('div');
-      vertEl.textContent = verticalName;
-      vertEl.style.writingMode = 'vertical-lr'; // hint for vertical rendering
-      textDiv.appendChild(vertEl);
+    // Product name as heading (from image title or alt if available)
+    let cardTitle = '';
+    if (img) {
+      cardTitle = img.getAttribute('title') || img.getAttribute('alt') || '';
+    }
+    if (cardTitle) {
+      const h2 = document.createElement('h2');
+      h2.textContent = cardTitle;
+      textCell.appendChild(h2);
     }
 
-    // 2. Product title (from image title or alt)
-    const imgTitle = img ? (img.getAttribute('title') || img.getAttribute('alt')) : '';
-    if (imgTitle) {
-      const titleEl = document.createElement('h2');
-      titleEl.textContent = imgTitle;
-      textDiv.appendChild(titleEl);
+    // Add details-description
+    const detailsDesc = cardLink.querySelector('.cmp-product-list__details-description');
+    if (detailsDesc) {
+      textCell.appendChild(document.createTextNode(detailsDesc.textContent));
     }
 
-    // 3. Details (description, available in)
-    const details = link.querySelector('.cmp-product-list__details');
-    if (details) {
-      Array.from(details.childNodes).forEach(node => {
-        textDiv.appendChild(node.cloneNode(true));
-      });
+    // Add available details (as separate lines)
+    const avail = cardLink.querySelector('.cmp-product-list__available-details');
+    if (avail) {
+      const availP = avail.querySelector('p');
+      const availH2 = avail.querySelector('h2');
+      if (availP && availH2) {
+        const availDiv = document.createElement('div');
+        availDiv.innerHTML = `${availP.textContent}<br><strong>${availH2.textContent}</strong>`;
+        textCell.appendChild(availDiv);
+      }
     }
 
-    return [img, textDiv];
+    // Add the row: [image, text cell]
+    rows.push([
+      img || '',
+      textCell
+    ]);
   });
 
-  // Extract header/logo and description from the top section
-  const infoSection = element.querySelector('.cmp-product-list__information');
-  if (infoSection) {
-    // Logo image
-    const logoImg = infoSection.querySelector('.cmp-product-list__logo img');
-    // Heading and description
-    const heading = infoSection.querySelector('.cmp-product-list__heading h2');
-    const desc = infoSection.querySelector('.cmp-product-list__heading p');
-    if (logoImg || heading || desc) {
-      const headerTextDiv = document.createElement('div');
-      if (heading) headerTextDiv.appendChild(heading.cloneNode(true));
-      if (desc) headerTextDiv.appendChild(desc.cloneNode(true));
-      cardRows.unshift([logoImg, headerTextDiv]);
-    }
-  }
-
-  // Build the table
-  const table = WebImporter.DOMUtils.createTable([
-    headerRow,
-    ...cardRows,
-  ], document);
-
-  // Replace the original element
+  // Create the cards table and replace the original element
+  const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

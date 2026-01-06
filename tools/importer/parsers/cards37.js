@@ -1,58 +1,56 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards37) block: 2 columns, multiple rows, each row is a card
-  // Header row
+  // Cards (cards37) block: 2 columns, each row is a card: [image, text content]
   const headerRow = ['Cards (cards37)'];
-
-  // Find all card links (each <a.cmp-product-list__link> is a card)
-  const cardLinks = element.querySelectorAll('a.cmp-product-list__link');
   const rows = [headerRow];
 
+  // Select all card anchor links (each is a card)
+  const cardLinks = element.querySelectorAll('a.cmp-product-list__link');
+
   cardLinks.forEach((cardLink) => {
-    // Image: Use the first <picture> (default image)
-    const contentDiv = cardLink.querySelector('.cmp-product-list__content');
-    let imgEl = null;
-    if (contentDiv) {
-      const firstPicture = contentDiv.querySelector('picture');
-      if (firstPicture) {
-        // Use the first <img> inside first <picture>
-        imgEl = firstPicture.querySelector('img');
+    // Find the main card content container
+    const cardContent = cardLink.querySelector('.cmp-product-list__content');
+    if (!cardContent) return;
+
+    // Get the first picture (main image)
+    const mainPicture = cardContent.querySelector('picture');
+    let imageEl = null;
+    if (mainPicture) {
+      // Use the first img inside the first picture
+      imageEl = mainPicture.querySelector('img');
+    }
+
+    // Get the details container
+    const details = cardContent.querySelector('.cmp-product-list__details');
+    let textCellContent = [];
+    // Title: Use the anchor's data-title attribute as heading
+    const titleText = cardLink.getAttribute('data-title');
+    if (titleText) {
+      const heading = document.createElement('h3');
+      heading.textContent = titleText;
+      textCellContent.push(heading);
+    }
+    if (details) {
+      // Description
+      const desc = details.querySelector('.cmp-product-list__details-description');
+      if (desc) {
+        textCellContent.push(desc);
+      }
+      // Available details
+      const avail = details.querySelector('.cmp-product-list__available-details');
+      if (avail) {
+        textCellContent.push(avail);
       }
     }
 
-    // Text cell: Title (from data-title or details), description, available sizes
-    const detailsDiv = cardLink.querySelector('.cmp-product-list__details');
-    let titleText = cardLink.getAttribute('data-title') || '';
-    let titleEl = null;
-    if (titleText) {
-      titleEl = document.createElement('h3');
-      titleEl.textContent = titleText;
-    }
-
-    // Description
-    let descEl = detailsDiv ? detailsDiv.querySelector('.cmp-product-list__details-description') : null;
-
-    // Available sizes
-    let availDiv = detailsDiv ? detailsDiv.querySelector('.cmp-product-list__available-details') : null;
-    let availEls = [];
-    if (availDiv) {
-      // Use all children of available-details
-      availEls = Array.from(availDiv.children);
-    }
-
-    // Compose text cell: title, description, available sizes
-    const textCell = [];
-    if (titleEl) textCell.push(titleEl);
-    if (descEl) textCell.push(descEl);
-    if (availEls.length) textCell.push(...availEls);
-
+    // Add the row: [image, text content]
     rows.push([
-      imgEl || '',
-      textCell
+      imageEl || '',
+      textCellContent
     ]);
   });
 
-  // Create block table
+  // Create the table block
   const block = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(block);
 }

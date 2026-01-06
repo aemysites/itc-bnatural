@@ -1,54 +1,48 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards35) block: 2 columns, multiple rows, first row is header
+  // Cards (cards35) block header
   const headerRow = ['Cards (cards35)'];
-  const rows = [headerRow];
 
   // Find all card content blocks
-  const cardContents = element.querySelectorAll('.cmp-card__content');
+  const cardEls = element.querySelectorAll('.cmp-card__content');
+  const rows = [];
 
-  cardContents.forEach(card => {
-    // The anchor wraps all card content
-    const anchor = card.querySelector('a');
-    if (!anchor) return;
-
-    // Image: find first img inside .cmp-card__media
-    const media = anchor.querySelector('.cmp-card__media');
-    let image = null;
+  cardEls.forEach(cardEl => {
+    // Image: find the img inside .cmp-card__media
+    const media = cardEl.querySelector('.cmp-card__media img');
+    let imgEl = null;
     if (media) {
-      image = media.querySelector('img');
+      imgEl = media;
     }
 
-    // Text cell: date/category + title
-    const info = anchor.querySelector('.cmp-card__info');
-    const textCellContent = document.createElement('div');
+    // Text content: include all visible text from .cmp-card__info
+    const info = cardEl.querySelector('.cmp-card__info');
+    let textContent = document.createElement('div');
     if (info) {
-      // Date and category
-      const dateDiv = info.querySelector('.cmp-card__date');
-      if (dateDiv) {
-        const spans = dateDiv.querySelectorAll('span');
-        const date = spans[0]?.textContent?.trim() || '';
-        const category = spans[1]?.textContent?.trim() || '';
-        if (date || category) {
-          const p = document.createElement('p');
-          p.textContent = date && category ? `${date} | ${category}` : (date || category);
-          textCellContent.appendChild(p);
-        }
-      }
-      // Title
-      const titleDiv = info.querySelector('.cmp-card__title');
-      if (titleDiv) {
-        const h4 = titleDiv.querySelector('h4');
-        if (h4) textCellContent.appendChild(h4);
-      }
+      // Clone all children to preserve all text and structure
+      Array.from(info.children).forEach(child => {
+        textContent.appendChild(child.cloneNode(true));
+      });
     }
-    // Build row: [image, text content]
-    rows.push([
-      image || '',
-      textCellContent.childNodes.length ? textCellContent : ''
-    ]);
+    // Link: use the card's main anchor
+    const link = cardEl.querySelector('a[href]');
+    if (link) {
+      // Add a CTA link at the bottom (using the card title as text if possible)
+      const title = info && info.querySelector('.cmp-card__title h4');
+      const cta = document.createElement('a');
+      cta.href = link.href;
+      cta.textContent = title ? title.textContent.trim() : link.href;
+      cta.target = '_self';
+      textContent.appendChild(cta);
+    }
+    rows.push([imgEl, textContent]);
   });
 
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Build table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...rows
+  ], document);
+
   element.replaceWith(table);
 }

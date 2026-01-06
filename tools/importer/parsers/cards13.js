@@ -1,66 +1,59 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Always use the block name as the header row
-  const headerRow = ['Cards (cards13)'];
+  // Find all card links (each card is an <a> with .cmp-card__content inside)
+  const cardLinks = Array.from(element.querySelectorAll('.cmp-card__container > a'));
 
-  // Find the card container
-  const container = element.querySelector('.cmp-card__container');
-  if (!container) return;
+  // Header row as required
+  const rows = [['Cards (cards13)']];
 
-  // Select all card links (each card is inside an <a>)
-  const cardLinks = Array.from(container.querySelectorAll('a'));
-
-  const rows = [headerRow];
-
-  cardLinks.forEach((cardLink) => {
-    // Card image: find <img> inside .cmp-card__media
-    const media = cardLink.querySelector('.cmp-card__media img');
+  cardLinks.forEach(cardLink => {
+    // Image: Find the <img> inside the card
+    const img = cardLink.querySelector('.cmp-card__media img');
     let imageEl = null;
-    if (media) {
-      imageEl = media;
+    if (img) {
+      imageEl = img;
     }
 
-    // Card text content: title, description, details
-    const info = cardLink.querySelector('.cmp-card__info');
-    let textContent = document.createElement('div');
-    if (info) {
-      // Title
-      const title = info.querySelector('.cmp-card__title h4');
-      if (title) {
-        textContent.appendChild(title);
-      }
-      // Description
-      const desc = info.querySelector('.cmp-card__description p');
-      if (desc) {
-        textContent.appendChild(desc);
-      }
-      // Details (Preparation, Serves, B Natural Drinks)
-      const details = info.querySelector('.cmp-card__details');
-      if (details) {
-        // We'll group all details into a single line, as in the screenshot
-        const detailContents = Array.from(details.querySelectorAll('.cmp-card__details-content'));
-        const detailDiv = document.createElement('div');
-        detailDiv.style.display = 'flex';
-        detailDiv.style.gap = '2em';
-        detailContents.forEach((detail) => {
-          const label = detail.querySelector('p');
-          const value = detail.querySelector('h4');
-          const detailItem = document.createElement('span');
-          if (label) {
-            detailItem.appendChild(label.cloneNode(true));
-          }
-          if (value) {
-            detailItem.appendChild(document.createTextNode(' '));
-            detailItem.appendChild(value.cloneNode(true));
-          }
-          detailDiv.appendChild(detailItem);
-        });
-        textContent.appendChild(detailDiv);
-      }
+    // Text content cell: build a fragment
+    const frag = document.createElement('div');
+    // Title
+    const title = cardLink.querySelector('.cmp-card__title h4');
+    if (title) {
+      const h4 = document.createElement('h4');
+      h4.textContent = title.textContent;
+      frag.appendChild(h4);
     }
-    rows.push([imageEl, textContent]);
+    // Description
+    const desc = cardLink.querySelector('.cmp-card__description p');
+    if (desc) {
+      const p = document.createElement('p');
+      p.textContent = desc.textContent;
+      frag.appendChild(p);
+    }
+    // Details (Preparation, Serves, B Natural Drinks)
+    const details = cardLink.querySelectorAll('.cmp-card__details-content');
+    if (details.length > 0) {
+      const detailsRow = document.createElement('div');
+      detailsRow.style.display = 'flex';
+      detailsRow.style.gap = '1em';
+      details.forEach(detail => {
+        const label = detail.querySelector('p');
+        const value = detail.querySelector('h4');
+        if (label && value) {
+          const detailDiv = document.createElement('div');
+          detailDiv.appendChild(document.createElement('div')).textContent = label.textContent;
+          detailDiv.appendChild(document.createElement('div')).textContent = value.textContent;
+          detailsRow.appendChild(detailDiv);
+        }
+      });
+      frag.appendChild(detailsRow);
+    }
+    // DO NOT invent a CTA link; the original HTML does not have one
+
+    rows.push([imageEl, frag]);
   });
 
+  // Create the table and replace the element
   const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

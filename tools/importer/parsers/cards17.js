@@ -1,40 +1,30 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards17) block header
+  // Cards (cards17) block: 2 columns, multiple rows, first row is header
   const headerRow = ['Cards (cards17)'];
   const rows = [headerRow];
 
-  // Find all card links inside the cards container
-  const cardLinks = element.querySelectorAll('.cmp-card__container > a');
+  // Find all card anchor elements (each card is an <a> containing .cmp-card__content)
+  const cardAnchors = element.querySelectorAll('a');
+  cardAnchors.forEach((cardAnchor) => {
+    // Title: find .cmp-card__title h3 inside this card
+    const titleEl = cardAnchor.querySelector('.cmp-card__title h3');
+    // Image: find the <img> inside .cmp-card__media
+    const imgEl = cardAnchor.querySelector('.cmp-card__media img');
 
-  cardLinks.forEach((cardLink) => {
-    // Each card's content is inside the .cmp-card__content
-    const content = cardLink.querySelector('.cmp-card__content');
-    if (!content) return;
-
-    // Title: inside .cmp-card__title > h3
-    const titleH3 = content.querySelector('.cmp-card__title h3');
-    let titleEl = '';
-    if (titleH3) {
-      // Use <strong> for title as per screenshot (bolded, heading-like)
-      titleEl = document.createElement('strong');
-      titleEl.textContent = titleH3.textContent.trim();
+    // Defensive: Only add if both title and image exist
+    if (titleEl && imgEl) {
+      // First column: image element (reference the existing img element)
+      // Second column: title as heading (reference the existing h3 element)
+      rows.push([
+        imgEl,
+        titleEl
+      ]);
     }
-
-    // Image: inside .cmp-card__media img
-    const img = content.querySelector('.cmp-card__media img');
-
-    // Ensure image is referenced, not cloned or recreated
-    let imgEl = '';
-    if (img) {
-      imgEl = img;
-    }
-
-    // Each card row: [image, title]
-    rows.push([imgEl, titleEl]);
   });
 
   // Create the table block
-  const table = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(table);
+  const block = WebImporter.DOMUtils.createTable(rows, document);
+  // Replace the original element
+  element.replaceWith(block);
 }

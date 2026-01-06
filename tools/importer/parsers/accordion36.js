@@ -1,50 +1,43 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header (must be a single cell)
+  // Accordion block header: single cell, per guidelines
   const headerRow = ['Accordion (accordion36)'];
 
   // Find all accordion items
-  const items = element.querySelectorAll('.cmp-accordion__item');
+  const items = Array.from(element.querySelectorAll('.cmp-accordion__item'));
 
-  // Each row: [title, content]
-  const rows = [headerRow];
-
-  items.forEach((item) => {
-    // Title: find the button and its title span
+  // Prepare rows for each accordion item
+  const rows = items.map(item => {
+    // Title: find the button and get its text
     const button = item.querySelector('button.cmp-accordion__button');
     let title = '';
     if (button) {
       const titleSpan = button.querySelector('.cmp-accordion__title');
       title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
     }
-
-    // Content: find the panel
+    // Content: find the panel and extract its main content container
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
-    let content = null;
+    let content = '';
     if (panel) {
-      // Defensive: get the first content container inside the panel
-      const contentContainer = panel.querySelector('.cmp-container, .container');
-      content = contentContainer || panel;
+      // Defensive: grab the first .container or .cmp-container or .cmp-text inside panel
+      let mainContent = panel.querySelector('.container, .cmp-container, .cmp-text');
+      if (!mainContent) {
+        // fallback: get all children
+        mainContent = document.createElement('div');
+        Array.from(panel.children).forEach(child => mainContent.appendChild(child.cloneNode(true)));
+      }
+      content = mainContent;
     }
-
-    // Only push rows that have both title and content
-    if (title && content) {
-      rows.push([title, content]);
-    }
+    // Title cell (string), Content cell (element)
+    return [title, content];
   });
 
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-
-  // Fix header row to have only one cell (remove extra columns)
-  if (block.querySelector('tr')) {
-    const headerTr = block.querySelector('tr');
-    // Remove all but the first cell in header row
-    while (headerTr.cells.length > 1) {
-      headerTr.deleteCell(1);
-    }
-  }
+  // Build the table with header as a single cell row
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...rows
+  ], document);
 
   // Replace the original element
-  element.replaceWith(block);
+  element.replaceWith(table);
 }

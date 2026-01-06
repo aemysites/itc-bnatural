@@ -1,49 +1,60 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Header row for Embed (embedVideo28)
+  // Header row as required by block guidelines
   const headerRow = ['Embed (embedVideo28)'];
 
-  // Find the iframe for the embedded video
+  // Find the iframe (YouTube embed)
   const iframe = element.querySelector('iframe');
   let videoUrl = '';
   if (iframe && iframe.src) {
-    // Try to extract the canonical video URL from the embed src
-    // For YouTube, convert embed URL to watch URL
-    const src = iframe.src;
-    let match;
-    if (src.includes('youtube.com/embed/')) {
-      match = src.match(/youtube.com\/embed\/([^?&]+)/);
-      if (match && match[1]) {
-        videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
-      } else {
-        videoUrl = src;
-      }
-    } else if (src.includes('vimeo.com')) {
-      match = src.match(/vimeo.com\/(?:video\/)?([0-9]+)/);
-      if (match && match[1]) {
-        videoUrl = `https://vimeo.com/${match[1]}`;
-      } else {
-        videoUrl = src;
-      }
+    // Convert YouTube embed src to share URL
+    const ytMatch = iframe.src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (ytMatch) {
+      videoUrl = `https://youtu.be/${ytMatch[1]}`;
     } else {
-      videoUrl = src;
+      videoUrl = iframe.src;
     }
   }
 
-  // Extract all visible text content from the element (excluding iframe)
-  // Also include iframe title if present
-  let textContent = '';
+  // Extract the video title from the iframe 'title' attribute
+  let videoTitle = '';
   if (iframe && iframe.title) {
-    textContent += iframe.title;
+    videoTitle = iframe.title;
   }
 
-  // Compose cell content: include all visible text and the video link
+  // Compose the cell: video title (if present) and video link
+  // Also add all visible text content from the HTML (including empty .video-details)
   const cellContent = [];
-  if (textContent) {
-    const textElem = document.createElement('div');
-    textElem.textContent = textContent;
-    cellContent.push(textElem);
+  if (videoTitle) {
+    const titleElem = document.createElement('div');
+    titleElem.textContent = videoTitle;
+    cellContent.push(titleElem);
   }
+
+  // Extract all visible text from all child elements (including subtitles/captions)
+  // Use less specific selector to get all text nodes in element
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node) {
+      if (node.textContent && node.textContent.trim()) {
+        return NodeFilter.FILTER_ACCEPT;
+      }
+      return NodeFilter.FILTER_REJECT;
+    }
+  });
+  let textNodes = [];
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode.textContent.trim());
+  }
+
+  // Only add text nodes that are not already present (avoid duplication of title)
+  textNodes.forEach((txt) => {
+    if (txt !== videoTitle && txt !== videoUrl) {
+      const txtElem = document.createElement('div');
+      txtElem.textContent = txt;
+      cellContent.push(txtElem);
+    }
+  });
+
   if (videoUrl) {
     const videoLink = document.createElement('a');
     videoLink.href = videoUrl;
@@ -51,15 +62,11 @@ export default function parse(element, { document }) {
     cellContent.push(videoLink);
   }
 
-  // Content row includes all HTML text and the video link
-  const contentRow = [cellContent];
-
-  // Build the table
-  const table = WebImporter.DOMUtils.createTable([
+  const cells = [
     headerRow,
-    contentRow,
-  ], document);
+    [cellContent]
+  ];
 
-  // Replace the original element with the table
-  element.replaceWith(table);
+  const block = WebImporter.DOMUtils.createTable(cells, document);
+  element.replaceWith(block);
 }

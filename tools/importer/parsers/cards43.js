@@ -1,75 +1,59 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards43) block
+  // Cards (cards43) block header
   const headerRow = ['Cards (cards43)'];
-  const rows = [headerRow];
 
-  // Each card is a .cmp-card__content
-  const cardEls = element.querySelectorAll('.cmp-card__content');
+  // Select all card content blocks
+  const cardNodes = element.querySelectorAll('.cmp-card__content');
+  const rows = [];
 
-  cardEls.forEach(card => {
+  cardNodes.forEach(card => {
     // Find the anchor (whole card is a link)
     const link = card.querySelector('a');
-    if (!link) return;
+    // Image: get the <img> inside .cmp-card__media
+    const img = card.querySelector('.cmp-card__media img');
+    // Info block: contains date, category, title
+    const info = card.querySelector('.cmp-card__info');
 
-    // --- IMAGE CELL ---
-    // Find the image inside the card
-    let imgEl = link.querySelector('img');
-    // Defensive: wrap in a div for consistency with screenshots
-    let imgCell;
-    if (imgEl) {
-      // Use the picture element if present for better semantics
-      const picture = imgEl.closest('picture');
-      imgCell = picture ? picture : imgEl;
-    } else {
-      imgCell = '';
+    // --- Build image cell ---
+    let imageCell = null;
+    if (img) {
+      imageCell = img;
     }
 
-    // --- TEXT CELL ---
-    // Compose the text cell
-    const info = link.querySelector('.cmp-card__info');
-    let textCellContent = [];
+    // --- Build text cell ---
+    // Compose text: date/category, title, all as a single block
+    const textCell = document.createElement('div');
     if (info) {
-      // Date & category
+      // Date/category
       const dateDiv = info.querySelector('.cmp-card__date');
       if (dateDiv) {
-        // Join all text nodes in dateDiv
-        const dateText = Array.from(dateDiv.childNodes).map(n => n.textContent.trim()).filter(Boolean).join(' | ');
-        if (dateText) {
-          const dateP = document.createElement('p');
-          dateP.textContent = dateText;
-          dateP.style.marginBottom = '0.5em';
-          textCellContent.push(dateP);
-        }
+        const dateClone = dateDiv.cloneNode(true);
+        textCell.appendChild(dateClone);
       }
       // Title
       const titleDiv = info.querySelector('.cmp-card__title');
       if (titleDiv) {
-        // Use the h4 or text inside
-        const h4 = titleDiv.querySelector('h4');
-        if (h4) {
-          const heading = document.createElement('strong');
-          heading.textContent = h4.textContent.trim();
-          textCellContent.push(heading);
-        }
+        const titleClone = titleDiv.cloneNode(true);
+        textCell.appendChild(titleClone);
       }
     }
-    // If no info, fallback to link text
-    if (textCellContent.length === 0) {
-      textCellContent.push(link.textContent.trim());
+    // Make the whole text cell a link if the card is a link
+    if (link && link.href) {
+      const wrapper = document.createElement('a');
+      wrapper.href = link.href;
+      wrapper.target = link.target || '_self';
+      wrapper.appendChild(textCell);
+      rows.push([imageCell, wrapper]);
+    } else {
+      rows.push([imageCell, textCell]);
     }
-    // Wrap all text in a div and link the whole cell
-    const textDiv = document.createElement('div');
-    textCellContent.forEach(el => textDiv.appendChild(el));
-    // Make the whole text cell a link
-    const cardLink = document.createElement('a');
-    cardLink.href = link.href;
-    cardLink.appendChild(textDiv);
-    // Add to rows
-    rows.push([imgCell, cardLink]);
   });
 
-  // Create the table and replace
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...rows,
+  ], document);
+
   element.replaceWith(table);
 }

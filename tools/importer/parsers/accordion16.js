@@ -1,49 +1,47 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header
+  // Table header row
   const headerRow = ['Accordion (accordion16)'];
 
   // Find all accordion items
   const items = Array.from(element.querySelectorAll('.cmp-accordion__item'));
 
-  const rows = [headerRow];
-
-  items.forEach(item => {
-    // Title cell: get the button title text (not the icon)
-    const button = item.querySelector('.cmp-accordion__button');
-    let titleSpan = button && button.querySelector('.cmp-accordion__title');
-    // Defensive fallback if structure changes
-    let titleContent = titleSpan ? titleSpan.textContent.trim() : (button ? button.textContent.trim() : '');
-    const titleCell = document.createElement('div');
-    titleCell.textContent = titleContent;
-    titleCell.style.fontWeight = 'bold';
-
-    // Content cell: find the panel and extract its content
-    const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
-    let contentCell;
-    if (panel) {
-      // Defensive: find first .cmp-text or all direct children
-      const cmpText = panel.querySelector('.cmp-text');
-      if (cmpText) {
-        contentCell = cmpText;
-      } else {
-        // If no .cmp-text, use panel's children
-        const panelChildren = Array.from(panel.children);
-        if (panelChildren.length) {
-          contentCell = document.createElement('div');
-          panelChildren.forEach(child => contentCell.appendChild(child.cloneNode(true)));
-        } else {
-          contentCell = document.createElement('div');
-          contentCell.innerHTML = panel.innerHTML;
-        }
-      }
-    } else {
-      // If no panel, leave cell blank
-      contentCell = document.createElement('div');
+  // Build rows for each accordion item
+  const rows = items.map(item => {
+    // Title: find the button and its title span
+    const button = item.querySelector('button.cmp-accordion__button');
+    let title = '';
+    if (button) {
+      const titleSpan = button.querySelector('.cmp-accordion__title');
+      title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
     }
-    rows.push([titleCell, contentCell]);
+    // Content: find the panel and its inner content
+    const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
+    let content = '';
+    if (panel) {
+      // Defensive: grab all children of the panel
+      // If there's a single container, use its children
+      const containers = panel.querySelectorAll(':scope > .container, :scope > div');
+      if (containers.length === 1) {
+        content = containers[0];
+      } else if (containers.length > 1) {
+        content = Array.from(containers);
+      } else {
+        // Fallback: use panel itself
+        content = panel;
+      }
+    }
+    // Title cell: create a paragraph for the title
+    const titleEl = document.createElement('p');
+    titleEl.textContent = title;
+    titleEl.style.fontWeight = 'bold';
+    return [titleEl, content];
   });
 
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Compose table
+  const cells = [headerRow, ...rows];
+  const table = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Replace the original element
   element.replaceWith(table);
 }

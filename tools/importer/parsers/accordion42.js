@@ -1,58 +1,48 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Get all accordion items
+  // Accordion block header: must be a single cell row
+  const headerRow = ['Accordion (accordion42)'];
+
+  // Find all accordion items
   const items = Array.from(element.querySelectorAll('.cmp-accordion__item'));
 
-  // Header row: block name only
-  const headerRow = ['Accordion (accordion42)'];
-  const rows = [headerRow];
+  // Build rows for each accordion item
+  const rows = items.map(item => {
+    // Title: find the button's title span
+    const titleSpan = item.querySelector('.cmp-accordion__title');
+    let titleCell = titleSpan ? titleSpan.textContent.trim() : '';
 
-  items.forEach(item => {
-    // Title: find the button, then the span with the title
-    let title = '';
-    const button = item.querySelector('button.cmp-accordion__button');
-    if (button) {
-      const titleSpan = button.querySelector('.cmp-accordion__title');
-      title = titleSpan ? titleSpan.textContent.trim() : button.textContent.trim();
-    }
-
-    // Content: find the panel, then extract only the inner content
-    let content = '';
+    // Content: find the panel and extract only relevant content (no wrappers)
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
+    let contentCell = document.createElement('div');
     if (panel) {
-      // Find the innermost .cmp-text or direct content block
-      const textBlock = panel.querySelector('.cmp-text');
-      if (textBlock) {
-        // Collect all <ul>, <ol>, <p>, <h2> in cmp-text
-        const mainContents = textBlock.querySelectorAll('ul, ol, p, h2');
-        if (mainContents.length > 0) {
-          const frag = document.createDocumentFragment();
-          mainContents.forEach(node => frag.appendChild(node.cloneNode(true)));
-          content = frag;
-        } else {
-          // Fallback: use all children of cmp-text
-          const frag = document.createDocumentFragment();
-          Array.from(textBlock.childNodes).forEach(child => frag.appendChild(child.cloneNode(true)));
-          content = frag;
-        }
+      // Find all cmp-text elements inside the panel
+      const textBlocks = panel.querySelectorAll('.cmp-text');
+      if (textBlocks.length) {
+        textBlocks.forEach(tb => {
+          Array.from(tb.childNodes).forEach(node => {
+            // Only append elements that are not empty paragraphs
+            if (!(node.nodeName === 'P' && !node.textContent.trim())) {
+              contentCell.appendChild(node.cloneNode(true));
+            }
+          });
+        });
       } else {
-        // Fallback: find all <ul>, <ol>, <p>, <h2> in panel
-        const mainContents = panel.querySelectorAll('ul, ol, p, h2');
-        if (mainContents.length > 0) {
-          const frag = document.createDocumentFragment();
-          mainContents.forEach(node => frag.appendChild(node.cloneNode(true)));
-          content = frag;
-        } else {
-          // Fallback: use panel itself
-          content = panel;
-        }
+        // If no cmp-text, get all direct children except empty paragraphs
+        Array.from(panel.children).forEach(child => {
+          if (!(child.nodeName === 'P' && !child.textContent.trim())) {
+            contentCell.appendChild(child.cloneNode(true));
+          }
+        });
       }
     }
-
-    rows.push([title, content]);
+    return [titleCell, contentCell];
   });
 
-  // Create block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(block);
+  // Compose the table
+  const cells = [headerRow, ...rows];
+  const table = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Replace original element
+  element.replaceWith(table);
 }

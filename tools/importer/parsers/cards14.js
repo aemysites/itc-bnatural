@@ -2,63 +2,77 @@
 export default function parse(element, { document }) {
   // Cards (cards14) block: 2 columns, first row is header, subsequent rows are cards
   const headerRow = ['Cards (cards14)'];
+
+  // Find the card container
+  const cardContainer = element.querySelector('.cmp-card__container');
+  if (!cardContainer) return;
+
+  // Find the anchor (for possible CTA)
+  const cardLink = cardContainer.querySelector('a[href]');
+
+  // Image (mandatory)
+  let imageEl = null;
+  const media = cardContainer.querySelector('.cmp-card__media');
+  if (media) {
+    imageEl = media.querySelector('img');
+  }
+
+  // Text content (mandatory)
+  const info = cardContainer.querySelector('.cmp-card__info');
+  let textContent = document.createElement('div');
+  if (info) {
+    // Title
+    const titleEl = info.querySelector('.cmp-card__title h4');
+    if (titleEl) {
+      textContent.appendChild(titleEl);
+    }
+    // Description
+    const descEl = info.querySelector('.cmp-card__description p');
+    if (descEl) {
+      textContent.appendChild(descEl);
+    }
+    // Details (Preparation, Serves, B Natural Drinks)
+    const details = info.querySelector('.cmp-card__details');
+    if (details) {
+      // We'll combine all details into a single row below the description
+      const detailsRow = document.createElement('div');
+      detailsRow.style.display = 'flex';
+      detailsRow.style.gap = '2em';
+      detailsRow.style.marginTop = '1em';
+      detailsRow.style.fontSize = 'small';
+      const detailItems = details.querySelectorAll('.cmp-card__details-content');
+      detailItems.forEach((item) => {
+        const label = item.querySelector('p');
+        const value = item.querySelector('h4');
+        if (label && value) {
+          const detailDiv = document.createElement('div');
+          detailDiv.appendChild(label.cloneNode(true));
+          detailDiv.appendChild(value.cloneNode(true));
+          detailsRow.appendChild(detailDiv);
+        }
+      });
+      textContent.appendChild(detailsRow);
+    }
+    // CTA: If the card is wrapped in a link, add a CTA at the bottom
+    if (cardLink && cardLink.getAttribute('href')) {
+      const cta = document.createElement('div');
+      const link = document.createElement('a');
+      link.href = cardLink.getAttribute('href');
+      link.textContent = 'View Recipe';
+      cta.appendChild(link);
+      cta.style.marginTop = '1em';
+      textContent.appendChild(cta);
+    }
+  }
+
+  // Build the table rows
   const rows = [headerRow];
+  rows.push([
+    imageEl,
+    textContent
+  ]);
 
-  // Find the card container(s)
-  // For this HTML, one card per .cmp-card--recipe-details
-  const cardContainers = [element]; // Defensive: treat the element itself as a card container
-
-  cardContainers.forEach(card => {
-    // Image (mandatory, first cell)
-    // Find the <picture> or <img> inside .cmp-card__media
-    const media = card.querySelector('.cmp-card__media');
-    let imageEl = null;
-    if (media) {
-      imageEl = media.querySelector('picture') || media.querySelector('img');
-    }
-
-    // Text content (mandatory, second cell)
-    // We'll assemble: title, description, details
-    const info = card.querySelector('.cmp-card__info');
-    const textContent = document.createElement('div');
-    if (info) {
-      // Title
-      const titleEl = info.querySelector('.cmp-card__title h4');
-      if (titleEl) {
-        textContent.appendChild(titleEl.cloneNode(true));
-      }
-      // Description
-      const descEl = info.querySelector('.cmp-card__description p');
-      if (descEl) {
-        textContent.appendChild(descEl.cloneNode(true));
-      }
-      // Details (Preparation, Serves, B Natural Drinks)
-      const details = info.querySelector('.cmp-card__details');
-      if (details) {
-        // We'll render the details as a horizontal row
-        const detailsRow = document.createElement('div');
-        detailsRow.style.display = 'flex';
-        detailsRow.style.gap = '2em';
-        Array.from(details.querySelectorAll('.cmp-card__details-content')).forEach(detail => {
-          const label = detail.querySelector('p');
-          const value = detail.querySelector('h4');
-          const detailCol = document.createElement('div');
-          if (label) detailCol.appendChild(label.cloneNode(true));
-          if (value) detailCol.appendChild(value.cloneNode(true));
-          detailsRow.appendChild(detailCol);
-        });
-        textContent.appendChild(detailsRow);
-      }
-    }
-
-    // Add the card row: [image, textContent]
-    rows.push([
-      imageEl,
-      textContent
-    ]);
-  });
-
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(block);
+  // Create and replace
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

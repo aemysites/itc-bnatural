@@ -1,46 +1,60 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // 1. Table header row
+  // Header row for Hero (hero5)
   const headerRow = ['Hero (hero5)'];
 
-  // 2. Find the main image (background/product image)
-  let imgEl = null;
-  const teaserImage = element.querySelector('.cmp-teaser__image .cmp-image img');
-  if (teaserImage) {
-    imgEl = teaserImage;
-  }
+  // Find the main carousel item
+  const carouselItem = element.querySelector('.cmp-carousel__item--active') || element.querySelector('.cmp-carousel__item');
 
-  // 3. Extract all text content from the HTML (including branding, product name, etc.)
-  // Collect text from all elements that might contain visible text
-  const textParts = [];
-
-  // Get alt text from image
-  if (teaserImage && teaserImage.alt) {
-    textParts.push(teaserImage.alt);
-  }
-
-  // Get all text from possible containers (including aria-labels and button labels)
-  element.querySelectorAll('[aria-label], .cmp-carousel__item, .cmp-teaser, .cmp-teaser__content, .cmp-carousel__content').forEach((el) => {
-    if (el.getAttribute('aria-label')) {
-      textParts.push(el.getAttribute('aria-label').trim());
+  // Get the image from the teaser inside the carousel item
+  let heroImage = null;
+  if (carouselItem) {
+    const teaserImage = carouselItem.querySelector('.cmp-teaser__image img');
+    if (teaserImage) {
+      heroImage = teaserImage;
     }
-    const txt = el.textContent.trim();
-    if (txt) textParts.push(txt);
-  });
+  }
 
-  // Remove duplicates and join with line breaks
-  const uniqueText = [...new Set(textParts)].join('\n');
+  // Row 2: Background image
+  const imageRow = [heroImage ? heroImage : ''];
 
-  // 4. Build table rows
-  const rows = [
+  // Row 3: Text content (heading, subheading, CTA)
+  // Extract all possible text from the teaser and carousel item, including visible text from all descendants
+  let textContent = [];
+  if (carouselItem) {
+    // Collect all text nodes inside carouselItem
+    const walker = document.createTreeWalker(carouselItem, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        if (node.textContent && node.textContent.trim()) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        return NodeFilter.FILTER_REJECT;
+      }
+    });
+    let node;
+    while ((node = walker.nextNode())) {
+      textContent.push(node.textContent.trim());
+    }
+    // Also include alt text from the image if present
+    if (heroImage && heroImage.alt && heroImage.alt.trim()) {
+      textContent.push(heroImage.alt.trim());
+    }
+  }
+
+  // Remove duplicates and join into a single string
+  const uniqueText = Array.from(new Set(textContent)).filter(Boolean).join('\n');
+  const textRow = [uniqueText ? uniqueText : ''];
+
+  // Compose table
+  const cells = [
     headerRow,
-    [imgEl ? imgEl : ''], // 2nd row: image (if found)
-    [uniqueText] // 3rd row: all text content from HTML (headline, subheading, branding, etc.)
+    imageRow,
+    textRow
   ];
 
-  // 5. Create the block table
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Create block table
+  const block = WebImporter.DOMUtils.createTable(cells, document);
 
-  // 6. Replace the original element
-  element.replaceWith(table);
+  // Replace the original element with the block table
+  element.replaceWith(block);
 }

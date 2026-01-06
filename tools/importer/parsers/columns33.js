@@ -5,21 +5,20 @@ export default function parse(element, { document }) {
   if (!teaser) return;
 
   // Extract left column: content
-  const leftContent = teaser.querySelector('.cmp-teaser__content');
+  const contentCol = teaser.querySelector('.cmp-teaser__content');
   // Extract right column: image
-  const rightImage = teaser.querySelector('.cmp-teaser__image');
+  const imageCol = teaser.querySelector('.cmp-teaser__image');
 
-  // Defensive fallback for missing columns
-  const leftCell = leftContent || document.createElement('div');
-  const rightCell = rightImage || document.createElement('div');
+  // Defensive: If either is missing, fallback to the whole teaser
+  const leftCell = contentCol || teaser;
+  const rightCell = imageCol || '';
 
-  // Build table rows per Columns (columns33) spec
+  // Table: header row, then content row
   const rows = [
     ['Columns (columns33)'],
-    [leftCell, rightCell],
+    [leftCell, rightCell]
   ];
 
-  // Create table and replace element
   const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }
