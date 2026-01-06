@@ -1,3 +1,4 @@
+/* stylelint-disable no-descending-specificity */
 .columns > div {
   display: flex;
   flex-direction: column;
@@ -195,7 +196,6 @@
   margin: 0 auto;
 }
 
-/* Responsive padding for columns block */
 @media (width <= 800px) {
   .columns.columns6 {
     padding: 20px 12px 18px;
@@ -203,7 +203,6 @@
   }
 }
 
-/* Layout for column content: two columns side by side */
 .columns.columns6 .block.columns-2-cols {
   display: flex;
   flex-direction: row;
@@ -213,7 +212,6 @@
   box-sizing: border-box;
 }
 
-/* Responsive stacking for narrow screens */
 @media (width <= 650px) {
   .columns.columns6 .block.columns-2-cols {
     flex-direction: column;
@@ -221,18 +219,14 @@
   }
 }
 
-/* Column proportions: left narrow, right wide */
 .columns.columns6 .block.columns-2-cols div {
   flex: 0 1 220px;
   min-width: 0;
-
-  /* stack content vertically inside each column */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
-/* Right column wider */
 .columns.columns6 .block.columns-2-cols div:last-child {
   flex: 1 1 340px;
   min-width: 180px;
@@ -240,13 +234,11 @@
   gap: 6px;
 }
 
-/* Left column inner spacing */
 .columns.columns6 .block.columns-2-cols div:first-child {
   gap: 8px;
   margin-top: 0;
 }
 
-/* Typography for left column */
 .columns.columns6 .block.columns-2-cols div:first-child h3 {
   color: #FF4B4B;
   font-weight: 700;
@@ -272,7 +264,6 @@
   line-height: 1.4;
 }
 
-/* Typography and spacing for right column */
 .columns.columns6 .block.columns-2-cols div:last-child h4 {
   color: #222;
   font-weight: 700;
@@ -283,7 +274,6 @@
   line-height: 1.3;
 }
 
-/* Fruit option styles for right column */
 .columns.columns6 .block.columns-2-cols div:last-child p {
   background: #FFF;
   border: 1px solid #E4E7EC;
@@ -306,9 +296,6 @@
   border-color: #C7CED6;
 }
 
-/* Ensure consistent stacking of right column */
-
-/* If a select element is present, style it as a dropdown */
 .columns.columns6 .block.columns-2-cols div:last-child select {
   background: #FFF;
   border: 1px solid #E4E7EC;
@@ -324,9 +311,94 @@
   appearance: none;
 }
 
-/* For very large screens, further constrain right column width */
 @media (width >= 1200px) {
   .columns.columns6 .block.columns-2-cols div:last-child {
     max-width: 460px;
+  }
+}
+
+
+.columns.columns11 {
+  background: #F9FDEB;
+  padding: 0;
+  margin: 0;
+}
+
+/* Main wrapper: horizontal side-by-side layout, centered vertically */
+.columns.columns11 .columns-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 120px;
+  padding: 32px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Image column: circle, vertically centered, with left indent */
+.columns.columns11 .columns-img-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  background: #fff;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 2%);
+}
+
+.columns.columns11 .columns-img-col img,
+.columns.columns11 .columns-img-col picture,
+.columns.columns11 .columns-img-col source {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+}
+
+.columns.columns11 .columns-text-col,
+.columns.columns11 .columns-img-col ~ div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1 1 0%;
+}
+
+.columns.columns11 h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #232323;
+  margin: 0 0 6px;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.columns.columns11 p {
+  font-size: 12px;
+  font-weight: 400;
+  color: #232323;
+  margin: 0;
+  line-height: 1.6;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+@media (width <= 600px) {
+  .columns.columns11 .columns-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 12px;
+    min-height: unset;
+  }
+
+  .columns.columns11 .columns-img-col {
+    margin-right: 0;
+    margin-bottom: 16px;
   }
 }
