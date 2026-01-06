@@ -1,71 +1,81 @@
 /* global WebImporter */
-
 export default function parse(element, { document }) {
-  // Carousel (carousel39) block header
-  const headerRow = ['Carousel (carousel39)'];
-  const rows = [headerRow];
-
   // Find the carousel content container
   const content = element.querySelector('.cmp-carousel__content');
   if (!content) return;
 
-  // Get all carousel items (slides)
-  const slides = content.querySelectorAll('.cmp-carousel__item');
+  // Find all carousel slides
+  const slides = Array.from(content.querySelectorAll('.cmp-carousel__item'));
+  if (!slides.length) return;
+
+  // Build the table rows
+  const rows = [];
+  // Block header row (must match target block name exactly)
+  rows.push(['Carousel (carousel39)']);
 
   slides.forEach((slide) => {
-    let imageCell = '';
-    let textCell = '';
-
-    // 1. Image or Video Cell
-    const video = slide.querySelector('video');
-    if (video) {
-      // For videos: create a link to the video source
-      const videoLink = document.createElement('a');
-      videoLink.href = video.src;
-      videoLink.textContent = video.src;
-      imageCell = videoLink;
+    // First cell: image or video (prefer image)
+    let mediaCell = '';
+    const img = slide.querySelector('img');
+    if (img) {
+      mediaCell = img;
     } else {
-      // For images: find the <img> element
-      const img = slide.querySelector('img');
-      if (img) {
-        imageCell = img;
+      const video = slide.querySelector('video');
+      if (video && video.src) {
+        // Convert video to a link to its src
+        const a = document.createElement('a');
+        a.href = video.src;
+        a.textContent = video.src;
+        mediaCell = a;
       }
     }
 
-    // 2. Text Cell - Extract all visible text content from the slide
-    // Only include actual visible text, not aria-label or alt unless it's visually present
-    const textFragments = [];
-    // Get all visible text nodes inside the slide (excluding script/style)
-    slide.querySelectorAll('*:not(script):not(style)').forEach((el) => {
-      if (el.childNodes.length) {
-        el.childNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            const txt = node.textContent.trim();
-            if (txt) textFragments.push(txt);
-          }
-        });
+    // Second cell: extract all visible text content (including deeply nested)
+    let textCell = '';
+    const textParts = [];
+    // Extract all visible text from elements, including alt attributes, aria-label, and textContent
+    slide.querySelectorAll('*').forEach(el => {
+      // Add alt text for images
+      if (el.tagName === 'IMG' && el.alt && el.alt.trim()) {
+        textParts.push(el.alt.trim());
+      }
+      // Add aria-label if present
+      if (el.hasAttribute('aria-label') && el.getAttribute('aria-label').trim()) {
+        textParts.push(el.getAttribute('aria-label').trim());
+      }
+      // Add text from text nodes
+      Array.from(el.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          textParts.push(node.textContent.trim());
+        }
+      });
+    });
+    // Also add any direct text nodes of the slide itself
+    Array.from(slide.childNodes).forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        textParts.push(node.textContent.trim());
       }
     });
-    // Additionally, for this carousel, branding and product names may be outside the slide but visually present
-    // Try to extract visible text from the logo area outside the slide
-    const logoArea = element.querySelectorAll('img[alt], [class*=logo], [class*=brand]');
-    logoArea.forEach((el) => {
-      if (el.alt && !textFragments.includes(el.alt.trim())) {
-        textFragments.push(el.alt.trim());
-      }
-      if (el.textContent && el.textContent.trim() && !textFragments.includes(el.textContent.trim())) {
-        textFragments.push(el.textContent.trim());
+
+    // Additionally, extract text from elements with class names that likely contain branding or product names
+    // (e.g., logo, product name, bottle labels)
+    // These classes are not present in the HTML, so look for any element with a role or aria-label that might be branding
+    const possibleBrandEls = slide.querySelectorAll('[aria-roledescription], [role]');
+    possibleBrandEls.forEach(el => {
+      if (el.textContent && el.textContent.trim()) {
+        textParts.push(el.textContent.trim());
       }
     });
-    // Join all text fragments into a single string
-    if (textFragments.length) {
-      textCell = textFragments.join(' ');
+
+    // Remove duplicates and join with double line breaks
+    if (textParts.length) {
+      textCell = [...new Set(textParts)].join('\n\n');
     }
 
-    rows.push([imageCell, textCell]);
+    rows.push([mediaCell, textCell]);
   });
 
-  // Create the table and replace the element
+  // Create the table using WebImporter utility
   const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

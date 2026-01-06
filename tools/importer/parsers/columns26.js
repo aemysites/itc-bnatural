@@ -1,56 +1,62 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Helper to extract teaser content and images
-  function extractTeaserContent(teaser) {
-    // Description (heading + paragraph)
-    const desc = teaser.querySelector('.cmp-teaser__description');
-    // CTA/action (optional)
-    const action = teaser.querySelector('.cmp-teaser__action-container');
-    // Main image (first .cmp-image picture)
-    const mainImgPicture = teaser.querySelector('.cmp-teaser__image .cmp-image picture');
-    // Small image (optional, .cmp-animation picture)
-    const smallImgPicture = teaser.querySelector('.cmp-animation picture');
-    // Compose left and right cell content
-    let leftContent, rightContent;
-    // Determine alignment by class
-    const isLeftImage = teaser.closest('.teaser')?.classList.contains('cmp-teaser--left-image-aligned');
-    if (isLeftImage) {
-      // Image left, text right
-      leftContent = document.createElement('div');
-      if (mainImgPicture) leftContent.append(mainImgPicture.cloneNode(true));
-      if (smallImgPicture) leftContent.append(smallImgPicture.cloneNode(true));
-      rightContent = document.createElement('div');
-      if (desc) rightContent.append(desc.cloneNode(true));
-      if (action) rightContent.append(action.cloneNode(true));
-    } else {
-      // Text left, image right
-      leftContent = document.createElement('div');
-      if (desc) leftContent.append(desc.cloneNode(true));
-      if (action) leftContent.append(action.cloneNode(true));
-      rightContent = document.createElement('div');
-      if (mainImgPicture) rightContent.append(mainImgPicture.cloneNode(true));
-      if (smallImgPicture) rightContent.append(smallImgPicture.cloneNode(true));
-    }
-    return [leftContent, rightContent];
-  }
+  // 1. Find all teaser blocks (each story_X div with class 'teaser')
+  const teasers = Array.from(element.querySelectorAll('.teaser'));
 
-  // Find all top-level teasers
-  const teasers = Array.from(element.querySelectorAll(':scope .cmp-our-story > .teaser'));
-  // Build rows for each teaser
+  // 2. For each teaser, extract the two columns: text (content) and image
   const rows = teasers.map(teaser => {
-    const [left, right] = extractTeaserContent(teaser);
-    return [left, right];
+    const content = teaser.querySelector('.cmp-teaser__content');
+    const image = teaser.querySelector('.cmp-teaser__image');
+    return [content || document.createElement('div'), image || document.createElement('div')];
   });
 
-  // Header row
-  const headerRow = ['Columns (columns26)'];
+  // 3. Extract the footer/gallery row (product images and names)
+  // The footer is the last block of images at the bottom of the .cmp-our-story container, not inside any teaser
+  const parent = element.querySelector('.cmp-our-story');
+  let galleryRow = null;
+  if (parent) {
+    // Get all images inside .cmp-our-story but outside .teaser blocks
+    const teaserImages = Array.from(parent.querySelectorAll('.teaser img'));
+    const allImages = Array.from(parent.querySelectorAll('img'));
+    const galleryImages = allImages.filter(img => !teaserImages.includes(img));
+    // Try to find the glass of juice (center image) and product packshots
+    if (galleryImages.length > 0) {
+      const galleryDiv = document.createElement('div');
+      galleryImages.forEach(img => {
+        galleryDiv.appendChild(img.cloneNode(true));
+        // Try to get any text node immediately following the image (product name)
+        if (img.nextSibling && img.nextSibling.nodeType === Node.TEXT_NODE && img.nextSibling.textContent.trim()) {
+          const span = document.createElement('span');
+          span.textContent = img.nextSibling.textContent.trim();
+          galleryDiv.appendChild(span);
+        }
+      });
+      // Also try to grab any text nodes directly inside parent after the last teaser
+      let lastTeaser = teasers[teasers.length - 1];
+      if (lastTeaser) {
+        let node = lastTeaser.nextSibling;
+        while (node) {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+            const span = document.createElement('span');
+            span.textContent = node.textContent.trim();
+            galleryDiv.appendChild(span);
+          }
+          node = node.nextSibling;
+        }
+      }
+      // The footer row should have the same number of columns as the main rows
+      // Place gallery in first cell, empty cell in second
+      galleryRow = [galleryDiv, document.createElement('div')];
+    }
+  }
 
-  // Build table
-  const table = WebImporter.DOMUtils.createTable([
-    headerRow,
-    ...rows
-  ], document);
+  // 4. Build the table: header row, teaser rows, and gallery/footer row if present
+  const cells = [['Columns (columns26)'], ...rows];
+  if (galleryRow) {
+    cells.push(galleryRow);
+  }
 
-  // Replace element
+  // 5. Replace the original element with the new table
+  const table = WebImporter.DOMUtils.createTable(cells, document);
   element.replaceWith(table);
 }

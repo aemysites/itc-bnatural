@@ -1,55 +1,60 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // 1. Table header row
+  // Helper: get hero image
+  function getHeroImage(el) {
+    // Look for the first <img> inside carousel or teaser image
+    return el.querySelector('.cmp-carousel__item img, .cmp-image__image, picture img');
+  }
+
+  // Helper: get all text content in hero block, including headings and paragraphs
+  function getAllHeroText(el) {
+    const nodes = [];
+    // Find all headings and paragraphs anywhere in the block
+    // Only include those with non-empty text
+    // For this block, also include any text nodes inside .cmp-carousel__item
+    const textSelectors = [
+      '.cmp-carousel__item h1',
+      '.cmp-carousel__item h2',
+      '.cmp-carousel__item h3',
+      '.cmp-carousel__item p',
+      '.cmp-carousel__item div',
+      '.cmp-text h1',
+      '.cmp-text h2',
+      '.cmp-text h3',
+      '.cmp-text p',
+      '.cmp-text div',
+      '.desc-1 .cmp-text h1',
+      '.desc-1 .cmp-text h2',
+      '.desc-1 .cmp-text h3',
+      '.desc-1 .cmp-text p',
+      '.desc-1 .cmp-text div'
+    ];
+    textSelectors.forEach(sel => {
+      el.querySelectorAll(sel).forEach(n => {
+        const txt = n.textContent.replace(/\u00A0/g, '').trim();
+        if (txt.length > 0) nodes.push(n);
+      });
+    });
+    return nodes;
+  }
+
+  // 1. Header row
   const headerRow = ['Hero (hero10)'];
 
-  // 2. Find the hero image (background/product image)
-  let imageEl = null;
-  const carouselImg = element.querySelector('.cmp-carousel__item .cmp-image img');
-  if (carouselImg) {
-    imageEl = carouselImg.cloneNode(true);
-  }
+  // 2. Image row
+  const heroImage = getHeroImage(element);
+  const imageRow = [heroImage ? heroImage : ''];
 
-  // 3. Compose the hero text cell with all visible text in the hero area
-  // Extract all text from .cmp-text block and also include all text from .cmp-carousel__item
-  let textCell = document.createElement('div');
+  // 3. Content row: all text content (headings, paragraphs, divs)
+  const content = getAllHeroText(element);
 
-  // Extract all text from .cmp-carousel__item (for hero headline and subheading)
-  const carouselItem = element.querySelector('.cmp-carousel__item');
-  if (carouselItem) {
-    // Try to find text in aria-label (for hero headline)
-    if (carouselItem.getAttribute('aria-label')) {
-      const h1 = document.createElement('h1');
-      h1.textContent = carouselItem.getAttribute('aria-label');
-      textCell.appendChild(h1);
-    }
-    // Try to find additional description in data attributes or alt text
-    const imgAlt = carouselImg && carouselImg.alt ? carouselImg.alt.trim() : '';
-    if (imgAlt) {
-      const p = document.createElement('p');
-      p.textContent = imgAlt;
-      textCell.appendChild(p);
-    }
-  }
+  // Compose table
+  const cells = [
+    headerRow,
+    imageRow,
+    [content]
+  ];
 
-  // Extract all text from .cmp-text block (for section heading)
-  const textBlock = element.querySelector('.cmp-text');
-  if (textBlock) {
-    Array.from(textBlock.children).forEach((child) => {
-      if (child.textContent && child.textContent.trim()) {
-        textCell.appendChild(child.cloneNode(true));
-      }
-    });
-  }
-
-  // 4. Compose table rows
-  const imageRow = [imageEl ? imageEl : ''];
-  const textRow = [textCell];
-
-  // 5. Create the block table
-  const cells = [headerRow, imageRow, textRow];
-  const block = WebImporter.DOMUtils.createTable(cells, document);
-
-  // 6. Replace the original element with the new block
-  element.replaceWith(block);
+  const table = WebImporter.DOMUtils.createTable(cells, document);
+  element.replaceWith(table);
 }

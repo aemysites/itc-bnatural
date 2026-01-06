@@ -1,16 +1,19 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion (accordion2) block header
+  // Accordion block header
   const headerRow = ['Accordion (accordion2)'];
   const rows = [headerRow];
 
-  // Find all accordion items
-  const items = element.querySelectorAll('.cmp-accordion__item');
+  // Find the main accordion container
+  const accordion = element.querySelector('.cmp-accordion');
+  if (!accordion) return;
 
-  items.forEach(item => {
-    // Title extraction: button > .cmp-accordion__title
+  // Find all accordion items
+  const items = accordion.querySelectorAll('.cmp-accordion__item');
+  items.forEach((item) => {
+    // Title: find the button with the title span
+    const button = item.querySelector('.cmp-accordion__button');
     let title = '';
-    const button = item.querySelector('button.cmp-accordion__button');
     if (button) {
       const titleSpan = button.querySelector('.cmp-accordion__title');
       if (titleSpan) {
@@ -19,33 +22,39 @@ export default function parse(element, { document }) {
         title = button.textContent.trim();
       }
     }
-
-    // Content extraction: panel > .cmp-text (all children)
-    let content = '';
+    // Content: find the panel
     const panel = item.querySelector('[data-cmp-hook-accordion="panel"]');
+    let content = '';
     if (panel) {
-      // Prefer .cmp-text block if present
-      const textBlock = panel.querySelector('.cmp-text');
-      if (textBlock) {
-        // Use all child nodes (preserve formatting, links, lists, etc)
-        content = Array.from(textBlock.childNodes);
-      } else {
-        // If no .cmp-text, fallback to all children of panel
-        content = Array.from(panel.childNodes);
+      // Drill down through single-child containers to get to the actual content
+      let contentEl = panel;
+      while (
+        contentEl.children.length === 1 &&
+        !contentEl.querySelector('.cmp-text, p, ul, ol, img, table') &&
+        contentEl.children[0]
+      ) {
+        contentEl = contentEl.children[0];
       }
+      // Now, look for the actual content block
+      const textBlock = contentEl.querySelector('.cmp-text') || contentEl;
+      // If .cmp-text exists, use its children; otherwise, use all children
+      const contentNodes = textBlock.classList && textBlock.classList.contains('cmp-text')
+        ? Array.from(textBlock.childNodes)
+        : Array.from(textBlock.childNodes);
+      // Filter out empty text nodes
+      const filteredNodes = contentNodes.filter(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent.trim() !== '';
+        }
+        return true;
+      });
+      // If only one node, use it directly; otherwise, use array
+      content = filteredNodes.length === 1 ? filteredNodes[0] : filteredNodes;
     }
-    // Defensive: if content is empty array, use empty string
-    if (Array.isArray(content) && content.length === 0) {
-      content = '';
-    }
-
-    // Add row: [title, content]
     rows.push([title, content]);
   });
 
-  // Create table block
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-
-  // Replace original element
-  element.replaceWith(block);
+  // Create the table and replace the element
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

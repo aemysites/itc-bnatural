@@ -1,37 +1,43 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards block header
+  // Cards (cards22) block header
   const headerRow = ['Cards (cards22)'];
+  const rows = [headerRow];
 
-  // Find all card anchor elements (each card is wrapped in an <a>)
-  const cardLinks = element.querySelectorAll('a');
+  // Find all card anchors (each card is an <a> with .cmp-card__content inside)
+  const cardLinks = element.querySelectorAll('.cmp-card__container > a');
 
-  // Build card rows
-  const rows = Array.from(cardLinks).map(card => {
-    // Image: Find the <img> inside the card
-    const img = card.querySelector('img');
-    // Title: Find the <h3> inside the card
-    const title = card.querySelector('h3');
+  cardLinks.forEach((cardLink) => {
+    const cardContent = cardLink.querySelector('.cmp-card__content');
+    if (!cardContent) return;
 
-    // Defensive: fallback to text if <h3> is missing
-    let textContent;
-    if (title) {
-      // Use heading element directly
-      textContent = title;
-    } else {
-      // Use text from card
-      textContent = document.createElement('div');
-      textContent.textContent = card.textContent.trim();
+    // Image (first cell)
+    const media = cardContent.querySelector('.cmp-card__media picture, .cmp-card__media img');
+    let imageEl = null;
+    if (media) {
+      // Prefer <picture> if present, else <img>
+      imageEl = media.tagName === 'PICTURE' ? media : media.querySelector('img');
     }
+    // Defensive: fallback to any img inside cardContent
+    if (!imageEl) imageEl = cardContent.querySelector('img');
 
-    // First cell: image, second cell: title (as heading)
-    return [img, textContent];
+    // Text (second cell): Only the title (h3)
+    const title = cardContent.querySelector('.cmp-card__title h3');
+    let textContent = '';
+    if (title) {
+      textContent = title.outerHTML;
+    }
+    // Create a container for the text cell
+    const textDiv = document.createElement('div');
+    if (textContent) textDiv.innerHTML = textContent;
+
+    rows.push([
+      imageEl || '',
+      textDiv
+    ]);
   });
 
-  // Compose table
-  const cells = [headerRow, ...rows];
-  const block = WebImporter.DOMUtils.createTable(cells, document);
-
-  // Replace the original element
-  element.replaceWith(block);
+  // Create the table and replace the element
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }

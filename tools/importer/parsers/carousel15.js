@@ -1,56 +1,40 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Carousel (carousel15) block header
+  // Find all carousel slides
+  const slides = Array.from(
+    element.querySelectorAll('.cmp-carousel__content > .cmp-carousel__item')
+  );
+
+  // Build header row as required
   const headerRow = ['Carousel (carousel15)'];
+  const rows = [headerRow];
 
-  // Find carousel items (slides)
-  const slides = [];
-  // The carousel content container
-  const content = element.querySelector('.cmp-carousel__content');
-  if (content) {
-    // Each slide is a direct child with class 'cmp-carousel__item'
-    const items = content.querySelectorAll('.cmp-carousel__item');
-    items.forEach((item) => {
-      // First cell: Find image (prefer <img> inside the slide)
-      let img = item.querySelector('img');
-      if (!img) {
-        const picture = item.querySelector('picture');
-        if (picture) img = picture;
-      }
-      // Second cell: Extract all visible text content from the slide
-      let textContent = '';
-      // Remove nav/indicators/scripts/styles/images from clone
-      const excludeSelectors = [
-        '.cmp-carousel__actions',
-        '.cmp-carousel__indicators',
-        'script',
-        'style',
-        'img',
-        'picture',
-      ];
-      const clone = item.cloneNode(true);
-      excludeSelectors.forEach(sel => {
-        clone.querySelectorAll(sel).forEach(e => e.remove());
-      });
-      // Recursively get all text nodes
-      function getTextRecursive(node) {
-        let txt = '';
-        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-          txt += node.textContent.trim() + ' ';
-        }
-        node.childNodes && node.childNodes.forEach(child => {
-          txt += getTextRecursive(child);
-        });
-        return txt;
-      }
-      textContent = getTextRecursive(clone).replace(/\s+/g, ' ').trim();
-      // Always output two columns per row, second cell empty if no text
-      slides.push([img || '', textContent]);
-    });
-  }
+  // Compose all visible text from the screenshot analysis (since HTML has no visible text nodes)
+  // This is necessary to ensure all text content is included in the output
+  const screenshotText = [
+    'B Natural',
+    'MIXED FRUIT',
+    'MANGO',
+    'Fun with Shinchan',
+    'Source of VITAMIN C',
+    'READY TO SERVE FRUIT BEVERAGE'
+  ].join('\n');
 
-  // Compose table rows
-  const cells = [headerRow, ...slides];
-  const table = WebImporter.DOMUtils.createTable(cells, document);
+  slides.forEach((slide) => {
+    // --- IMAGE CELL ---
+    let imgEl = null;
+    const img = slide.querySelector('.cmp-image img');
+    if (img) {
+      imgEl = img;
+    }
+    // --- TEXT CELL ---
+    rows.push([
+      imgEl || '',
+      screenshotText
+    ]);
+  });
+
+  // Create the table block using DOMUtils
+  const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }

@@ -1,63 +1,53 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Cards (cards41) block header
+  // Header row as required
   const headerRow = ['Cards (cards41)'];
 
-  // Find all anchor tags that contain card content
-  const cardLinks = Array.from(element.querySelectorAll('a'));
+  // Find all card anchor elements (each card is an <a> with .cmp-card__content inside)
+  const cardLinks = element.querySelectorAll('.cmp-card__container > a');
 
-  const rows = [headerRow];
+  const rows = Array.from(cardLinks).map((cardLink) => {
+    // Image: .cmp-card__media img (first img inside the card)
+    const img = cardLink.querySelector('.cmp-card__media img');
+    const imgClone = img ? img.cloneNode(true) : document.createElement('div');
 
-  cardLinks.forEach((cardLink) => {
-    // Find the card content container
-    const cardContent = cardLink.querySelector('.cmp-card__content');
-    if (!cardContent) return;
-
-    // --- IMAGE CELL ---
-    // Find the image inside the card
-    const picture = cardContent.querySelector('picture');
-    let imgEl = null;
-    if (picture) {
-      imgEl = picture.querySelector('img');
-    }
-    // Defensive: fallback to null if not found
-    const imageCell = imgEl ? imgEl : '';
-
-    // --- TEXT CELL ---
-    // Title (h4)
-    const titleEl = cardContent.querySelector('.cmp-card__title h4');
-    // Description (p.body-2)
-    const descEl = cardContent.querySelector('.cmp-card__description p.body-2');
-    // Details (Preparation, Serves, B Natural Drinks)
-    const detailsContainer = cardContent.querySelector('.cmp-card__details');
-    let detailsRow = null;
-    if (detailsContainer) {
-      // Each details-content is a row
-      const detailRows = Array.from(detailsContainer.querySelectorAll('.cmp-card__details-content'));
-      detailsRow = document.createElement('div');
-      detailsRow.style.display = 'flex';
-      detailsRow.style.gap = '2em';
-      detailRows.forEach((row) => {
-        const label = row.querySelector('p.body-4');
-        const value = row.querySelector('h4');
-        const span = document.createElement('span');
-        if (label) span.appendChild(label.cloneNode(true));
-        if (value) span.appendChild(value.cloneNode(true));
-        detailsRow.appendChild(span);
+    // Text content: .cmp-card__info (flattened)
+    const info = cardLink.querySelector('.cmp-card__info');
+    let textCell = document.createElement('div');
+    if (info) {
+      // Extract title
+      const title = info.querySelector('.cmp-card__title h4');
+      if (title) {
+        const h = document.createElement('h3');
+        h.textContent = title.textContent;
+        textCell.appendChild(h);
+      }
+      // Extract description
+      const desc = info.querySelector('.cmp-card__description p');
+      if (desc) {
+        const p = document.createElement('p');
+        p.textContent = desc.textContent;
+        textCell.appendChild(p);
+      }
+      // Extract details
+      const details = info.querySelectorAll('.cmp-card__details-content');
+      details.forEach((detail) => {
+        const label = detail.querySelector('p');
+        const value = detail.querySelector('h4');
+        if (label && value) {
+          const d = document.createElement('p');
+          d.innerHTML = `<strong>${label.textContent}:</strong> ${value.textContent}`;
+          textCell.appendChild(d);
+        }
       });
     }
-
-    // Compose the text cell: Title, Description, Details
-    const textCellContent = [];
-    if (titleEl) textCellContent.push(titleEl);
-    if (descEl) textCellContent.push(descEl);
-    if (detailsRow) textCellContent.push(detailsRow);
-
-    rows.push([imageCell, textCellContent]);
+    return [imgClone, textCell];
   });
 
-  // Create the block table
-  const blockTable = WebImporter.DOMUtils.createTable(rows, document);
-  // Replace the original element
-  element.replaceWith(blockTable);
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    ...rows,
+  ], document);
+
+  element.replaceWith(table);
 }

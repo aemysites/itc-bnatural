@@ -1,50 +1,59 @@
 /* global WebImporter */
+
 export default function parse(element, { document }) {
-  // Header row as required by block spec
+  // Header row as required
   const headerRow = ['Video (video34)'];
 
-  // Find the video iframe (YouTube)
+  // --- Find the video iframe ---
   const iframe = element.querySelector('iframe[src*="youtube"]');
   let videoUrl = '';
   if (iframe && iframe.src) {
-    const embedMatch = iframe.src.match(/\/embed\/([\w-]+)/);
-    if (embedMatch && embedMatch[1]) {
-      videoUrl = `https://www.youtube.com/watch?v=${embedMatch[1]}`;
+    // Convert embed URL to watch URL for YouTube
+    const match = iframe.src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
     } else {
       videoUrl = iframe.src;
     }
   }
 
-  // Find the poster image (the main video thumbnail)
+  // --- Find the poster image (exclude play icon) ---
   let posterImg = null;
-  const overlayImg = element.querySelector('.video-overlay img.poster');
-  if (overlayImg) {
-    posterImg = overlayImg.cloneNode(true);
-  } else {
-    // fallback: any img in video-overlay that is not playicon.svg
-    const fallbackImg = Array.from(element.querySelectorAll('.video-overlay img')).find(img => !img.src.includes('playicon.svg'));
-    if (fallbackImg) posterImg = fallbackImg.cloneNode(true);
+  const posterImgEl = element.querySelector('.video-overlay .lazy-image-container img.poster');
+  if (posterImgEl) {
+    posterImg = posterImgEl.cloneNode(true);
   }
 
-  // Compose the cell contents
-  const cellContents = [];
-  // Add poster image if present
-  if (posterImg) cellContents.push(posterImg);
-  // Add video link
+  // --- Find the B Natural logo (if present) ---
+  let logoImg = null;
+  // Find the logo image by alt text (if present in HTML)
+  const logoImgEl = element.querySelector('img[alt*="Natural"]');
+  if (logoImgEl) {
+    logoImg = logoImgEl.cloneNode(true);
+  }
+
+  // --- Build the cell content ---
+  const cellContent = [];
+  if (logoImg) {
+    cellContent.push(logoImg);
+    cellContent.push(document.createElement('br'));
+  }
+  if (posterImg) {
+    cellContent.push(posterImg);
+    cellContent.push(document.createElement('br'));
+  }
   if (videoUrl) {
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.textContent = videoUrl;
-    cellContents.push(document.createElement('br'));
-    cellContents.push(a);
+    const videoLink = document.createElement('a');
+    videoLink.href = videoUrl;
+    videoLink.textContent = videoUrl;
+    cellContent.push(videoLink);
   }
 
-  // Build the block table
-  const table = WebImporter.DOMUtils.createTable([
+  // --- Build the table ---
+  const rows = [
     headerRow,
-    [cellContents]
-  ], document);
-
-  // Replace the original element
+    [cellContent]
+  ];
+  const table = WebImporter.DOMUtils.createTable(rows, document);
   element.replaceWith(table);
 }
